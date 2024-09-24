@@ -6,7 +6,7 @@
  */
 
 namespace Smackcoders\SMEXP;
-
+use Smackcoders\SMEXP\WC_Coupon;
 if ( ! defined( 'ABSPATH' ) )
 	exit; // Exit if accessed directly
 
@@ -47,6 +47,71 @@ class WooCommerceExport extends ExportExtension{
 	 * @param $optional
 	 * @return bool
 	 */
+	public function getCouponsData($id, $type, $optionalType){
+		$coupon_id = $id;
+		$c = new \WC_Coupon($coupon_id);
+			$DiscountType = $c->get_discount_type();	
+			$CouponAmount = $c->get_amount();
+			$IndividualUse = $c->get_individual_use();
+			$ProductIDs = $c->get_product_ids();
+			$ExcludeProductIDs = $c->get_excluded_product_ids(); 
+			$UsageLimit = $c->get_usage_limit();
+			$UsageLimitPerUser = $c->get_usage_limit_per_user();
+			$LimitUsageToXItems = $c->get_limit_usage_to_x_items();
+			$ExpiryDate = $c->get_date_expires();
+			$FreeShipping = $c->get_free_shipping();
+			$ExcludeSaleItems = $c->get_exclude_sale_items();
+			$MinimumAmount = $c->get_minimum_amount();
+			$MaximumAmount = $c->get_maximum_amount();
+			$CustomerEmail = $c->get_email_restrictions();
+			$ExcludedProductCategories = $c->get_excluded_product_categories();
+			$ProductCategories = $c->get_product_categories();
+
+			$product_Ids = array(); 
+			$Exclude_Product_IDs =array();
+			$product_cat = array();
+			$exclude_cat = array();
+			$cus_email =  array();
+			foreach ($ProductCategories as $p_IDs) {
+				$product_cat[] = $p_IDs;
+			}
+			foreach ($ExcludedProductCategories as $p_IDs) {
+				$exclude_cat[] = $p_IDs;
+			}
+
+			foreach ($CustomerEmail as $p_IDs) {
+				$cus_email[] = $p_IDs;
+			}
+
+			foreach ($ProductIDs as $p_IDs) {
+				$product_Ids[] = $p_IDs;
+			}
+			foreach($ExcludeProductIDs as $Exclude_PIds){
+				$Exclude_Product_IDs[] = $Exclude_PIds;
+			}
+
+			WooCommerceExport::$export_instance->data[$id]['exclude_product_categories'] = !empty($exclude_cat) ? implode(',', $exclude_cat) : '';
+			WooCommerceExport::$export_instance->data[$id]['customer_email'] = !empty($cus_email) ? implode(',', $cus_email) : '';
+			WooCommerceExport::$export_instance->data[$id]['product_categories'] = !empty($product_cat) ? implode(',', $product_cat) : '';
+
+
+
+			WooCommerceExport::$export_instance->data[$id]['discount_type'] = $DiscountType;
+			WooCommerceExport::$export_instance->data[$id]['coupon_amount'] = $CouponAmount;
+			WooCommerceExport::$export_instance->data[$id]['individual_use'] = $IndividualUse ? 'yes' : 'no';
+			WooCommerceExport::$export_instance->data[$id]['usage_limit'] = $UsageLimit;
+			WooCommerceExport::$export_instance->data[$id]['usage_limit_per_user'] = $UsageLimitPerUser;
+			WooCommerceExport::$export_instance->data[$id]['limit_usage_to_x_items'] = $LimitUsageToXItems;
+			WooCommerceExport::$export_instance->data[$id]['expiry_date'] = $ExpiryDate ? $ExpiryDate->date('Y-m-d H:i:s') : null;
+			WooCommerceExport::$export_instance->data[$id]['free_shipping'] = $FreeShipping ? 'yes' : 'no';
+			WooCommerceExport::$export_instance->data[$id]['exclude_sale_items'] = $ExcludeSaleItems ? 'yes' : 'no';
+			WooCommerceExport::$export_instance->data[$id]['minimum_amount'] = $MinimumAmount;
+			WooCommerceExport::$export_instance->data[$id]['maximum_amount'] = $MaximumAmount;	
+			// Handle the product IDs and excluded product IDs with implode only if they are not empty
+			WooCommerceExport::$export_instance->data[$id]['product_ids'] = !empty($product_Ids) ? implode(',', $product_Ids) : '';
+			WooCommerceExport::$export_instance->data[$id]['exclude_product_ids'] = !empty($Exclude_Product_IDs) ? implode(',', $Exclude_Product_IDs) : '';
+			
+		}
 	public function getWooComOrderData($id, $type, $optional)
 	{ 
 		$order = wc_get_order($id);
@@ -488,11 +553,11 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['tax_status'] = array_key_exists($tax_status,$tax_status_mapping) ? $tax_status_mapping[$tax_status] : '' ;
 
 		$product_type = $product->get_type();
-		$product_type_mapping = array('simple' => 1 , 'grouped' => 2, 'external' => 3, 'variable' => 4);
+		$product_type_mapping = array('simple' => 1 , 'grouped' => 2, 'external' => 3, 'variable' => 4 , 'subscription' => 5 , 'variable-subscription' => 6 ,'bundle' => 7);
 		WooCommerceExport::$export_instance->data[$id]['product_type'] = array_key_exists($product_type,$product_type_mapping) ? $product_type_mapping[$product_type] : '' ;
 
 		if (has_term('featured', 'product_visibility', $id)) {
-			WooCommerceExport::$export_instance->data[$product_id]['featured_product'] = '1';
+			WooCommerceExport::$export_instance->data[$id]['featured_product'] = '1';
 		}
 		WooCommerceExport::$export_instance->data[$id]['tax_class'] = $product_datas['tax_class'] ?? '';
 		if (method_exists($product, 'get_file_paths')) {
@@ -592,7 +657,7 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['sale_price_dates_to'] = $sale_price_dates_to ?? '';
 		WooCommerceExport::$export_instance->data[$id]['sold_individually'] = ($sold_individually > 0) ? 'yes' : 'no';
 		WooCommerceExport::$export_instance->data[$id]['backorders'] = $backorders_no;
-		$product_url = get_permalink($product->get_id());
+		$product_url = ($product->is_type('external')) ? $product->get_product_url() : '';
 		$button_text = ($product->is_type('external')) ? $product->single_add_to_cart_text() : '';
 		$featured =get_post_meta($product->get_id(), 'featured', true) ? '1' : '0';
 		WooCommerceExport::$export_instance->data[$id]['product_url'] = $product_url;
@@ -600,19 +665,56 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['featured'] = $featured;	
 		$downloadable_files = [];
 		$download_type = [];
-			$downloads = $product->get_downloads(); 
+		if(($product->is_type('variable'))){
+			$download_limits = [];
+			$download_expiries = [];
+			$variations = $product->get_children();
+			foreach ($variations as $variation_id) {
+				$variation = wc_get_product($variation_id);
+				// Check if the variation is downloadable
+				if ($variation->is_downloadable()) {
+					$downloads = $variation->get_downloads();
+					foreach ($downloads as $download) {
+						$file_url = $download->get_file(); // Get the file URL
+						$file_name = $download->get_name(); // Get the file name
+						$file_string = $file_name.','.$file_url;
+						$downloadable_files[] = $file_string;
+						if (strpos($file_url, 'http') === 0) {
+							$download_type[] = 'external'; // If URL starts with http, it's an external URL
+						} else {
+							$download_type[] = 'file'; // Otherwise, it's a file URL
+						}
+
+					}
+					$download_limit = $variation->get_download_limit(); // Default is -1 for unlimited
+					$download_expiry = $variation->get_download_expiry(); // Default is -1 for no expiry
+					// Store the values
+					$download_limits[] = $download_limit;
+					$download_expiries[] = $download_expiry;
+
+				}
+				$download_limit = !empty($download_limit) ? implode('|', $download_limits) : '';
+				$download_expiry = !empty($download_expiry) ? implode('|', $download_expiries) : '';
+				$download_type_str = !empty($download_type) ? implode('|', $download_type) : '';
+				$download_file_str = !empty($downloadable_files) ? implode('|', $downloadable_files) : '';
+			}
+		}else{
+			$downloads = $product->get_downloads();
 			foreach ($downloads as $download) {
 				$file_string = $download['name'].','.$download['file'];
 				$downloadable_files[] = $file_string;
-				$download_types = isset($download['type']) ? $download['type'] : '';
-				if(!empty($download_types)){
-					$download_type[] = $download_types;
+				if (strpos($download['file'], 'http') === 0) {
+					$download_type[] = 'external'; // If URL starts with http, it's an external URL
+				} else {
+					$download_type[] = 'file'; // Otherwise, it's a file URL
 				}
 			}
-		$download_type_str = implode('|', $download_type);
-		$download_file_str = implode('|', $downloadable_files);
-		$download_limit = $product->get_download_limit();
-		$download_expiry = $product->get_download_expiry();
+			$download_type_str = !empty($download_type) ? implode('|', $download_type) : '';
+			$download_file_str = !empty($downloadable_files) ? implode('|', $downloadable_files) : '';
+				
+			$download_limit = $product->get_download_limit();
+			$download_expiry = $product->get_download_expiry();
+		}
 
 		WooCommerceExport::$export_instance->data[$id]['downloadable_files'] = $download_file_str;
 		WooCommerceExport::$export_instance->data[$id]['download_limit'] = ($download_limit > -1) ? $download_limit : '';
@@ -634,148 +736,105 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['_subscription_trial_length'] = $subscription_trial_length ?? '';
 		WooCommerceExport::$export_instance->data[$id]['_subscription_price'] = $subscription_price ?? '';
 		WooCommerceExport::$export_instance->data[$id]['_subscription_sign_up_fee'] = $subscription_sign_up_fee ?? '';	
-        
+        // Retrieve barcode details
+		if(is_plugin_active('yith-woocommerce-barcodes-premium/init.php' )){
+			$barcode_protocol = get_post_meta($id, '_ywbc_barcode_protocol', true);
+			$barcode_value = get_post_meta($id, '_ywbc_barcode_value', true);
+			$barcode_display_value = get_post_meta($id, '_ywbc_barcode_display_value', true);
+			WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_display_value'] = $barcode_display_value ?? '';
+			WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_value'] = $barcode_value ?? '';
+			WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_protocol'] = $barcode_protocol ?? '';
+		}
+
+
 		//woocommerce-product-bundles plugin
-		if(is_plugin_active('woocommerce-product-bundles/woocommerce-product-bundles.php')){
-			global $wpdb;
-			$bundle_query = $wpdb->prepare("SELECT product_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $id);
-			$bundle_results = $wpdb->get_results($bundle_query);
-
-			if(!empty($bundle_results)){
-				foreach($bundle_results as $bundle_value){
-					$product_bundle_query = $wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts where id = %d", $bundle_value->product_id);
-					$product_bundle_value=$wpdb->get_results($product_bundle_query);
-					$bundle_item[] = $product_bundle_value[0]->post_title;
+		//woocommerce-product-bundles plugin
+		if (is_plugin_active('woocommerce-product-bundles/woocommerce-product-bundles.php')) {
+			// Get the bundle product
+			$bundle_product = wc_get_product($id);
+		
+			if ($bundle_product && $bundle_product->is_type('bundle')) {
+				// Initialize default values
+				$bundle_items = array();
+				$optional_values = array();
+				$quantity_min = array();
+				$quantity_max = array();
+				$price_values = array();
+				$discount_values = array();
+				$product_values = array();
+				$cart_values = array();
+				$order_values = array();
+				$product_price_values = array();
+				$cart_price_values = array();
+				$order_price_values = array();
+				$thumb_values = array();
+				$override_values = array();
+				$description_values = array();
+				$override_title_values = array();
+				$override_description_values = array();
+		
+				// Get bundle settings
+				$min_bundle_size = $bundle_product->get_min_bundle_size();
+				$max_bundle_size = $bundle_product->get_max_bundle_size();
+				$edit_in_cart = $bundle_product->get_editable_in_cart() ? 'Yes' : 'No';
+				$layout = $bundle_product->get_layout(); // Assuming this method exists
+				$get_mode = $bundle_product->get_group_mode();
+				if($get_mode == 'noindent'){
+					$item_grouping = 'flat';
+				}else if($get_mode == 'parent'){
+					$item_grouping = 'grouped';
+				}else{
+					$item_grouping = '';
 				}
-
-				$bundle_items = implode('|', $bundle_item);
-				WooCommerceExport::$export_instance->data[$id]['product_bundle_items'] = $bundle_items; 
-			}
-
-			$bundle_meta = $wpdb->prepare("SELECT bundled_item_id FROM {$wpdb->prefix}woocommerce_bundled_items where bundle_id = %d", $id);
-			$bundle_meta_result = $wpdb->get_results($bundle_meta);
-
-			if(!empty($bundle_meta_result)){
-				foreach($bundle_meta_result as $bundle_meta_value){
-					$bundle_fields = $bundle_meta_value->bundled_item_id;
-
-					$bundle_field = $wpdb->prepare("SELECT meta_key,meta_value FROM {$wpdb->prefix}woocommerce_bundled_itemmeta where bundled_item_id = %d", $bundle_fields);
-					$bundle_field_result = $wpdb->get_results($bundle_field);
-					if(!empty($bundle_field_result)){
-						foreach($bundle_field_result as $bundle_field_value){
-							if($bundle_field_value->meta_key == 'optional'){
-								$optional = $bundle_field_value->meta_value;
-								if($optional == 'yes'){
-									$optional_value[] = 'Yes';
-								}elseif($optional == 'no'){
-									$optional_value[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'quantity_min'){
-								$q_min[] = $bundle_field_value->meta_value;
-							}
-							if($bundle_field_value->meta_key == 'quantity_max'){
-								$q_max[] = $bundle_field_value->meta_value;
-							}
-							if($bundle_field_value->meta_key == 'priced_individually'){
-								$priced_individually = $bundle_field_value->meta_value;
-								if($priced_individually == 'yes'){
-									$price_value[] = 'Yes';
-								}elseif($priced_individually == 'no'){
-									$price_value[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'discount'){
-								$discount_value[] = $bundle_field_value->meta_value;
-							}
-							if($bundle_field_value->meta_key == 'single_product_visibility'){
-								$single_product_visibility = $bundle_field_value->meta_value;
-								if($single_product_visibility == 'visible'){
-									$product_value[] = 'Yes';
-								}elseif($single_product_visibility == 'hidden'){
-									$product_value[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'cart_visibility'){
-								$cart_visibility = $bundle_field_value->meta_value;
-								if($cart_visibility == 'visible'){
-									$cart[] = 'Yes';
-								}elseif($cart_visibility == 'hidden'){
-									$cart[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'order_visibility'){
-								$order_visibility = $bundle_field_value->meta_value;
-								if($order_visibility == 'visible'){
-									$order[] = 'Yes';
-								}elseif($order_visibility == 'hidden'){
-									$order[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'hide_thumbnail'){
-								$hide_thumbnail = $bundle_field_value->meta_value;
-								if($hide_thumbnail == 'yes'){
-									$thumb[] = 'Yes';
-								}elseif($hide_thumbnail == 'no'){
-									$thumb[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'override_title'){
-								$override_title = $bundle_field_value->meta_value;
-								if($override_title == 'yes'){
-									$override[] = 'Yes';
-								}elseif($override_title == 'no'){
-									$override[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'override_description'){
-								$override_description = $bundle_field_value->meta_value;
-								if($override_description == 'yes'){
-									$description[] = 'Yes';
-								}elseif($override_description == 'no'){
-									$description[] = 'No';
-								}
-							}
-							if($bundle_field_value->meta_key == 'title'){
-								$override_title_value[] = $bundle_field_value->meta_value;
-							}
-							if($bundle_field_value->meta_key == 'description'){
-								$override_description_value[] = $bundle_field_value->meta_value;
-							}
-						}
-					}
+				foreach ($bundle_product->get_bundled_items() as $bundled_item) {
+					// Get bundled item product
+					$bundled_product = $bundled_item->get_product();
+					$bundle_items[] = $bundled_product->get_name();
+		
+					// Retrieve settings for each bundled item
+					$optional_values[] = method_exists($bundled_item, 'is_optional') && $bundled_item->is_optional() ? 'Yes' : 'No';
+					$quantity_min[] = method_exists($bundled_item, 'get_min_quantity') ? $bundled_item->get_min_quantity() : '';
+					$quantity_max[] = method_exists($bundled_item, 'get_max_quantity') ? $bundled_item->get_max_quantity() : '';
+					$price_values[] = method_exists($bundled_item, 'is_priced_individually') && $bundled_item->is_priced_individually() ? 'Yes' : 'No';
+					$discount_values[] = method_exists($bundled_item, 'get_discount') ? $bundled_item->get_discount() : '';
+					$product_values[] = method_exists($bundled_item, 'get_single_product_visibility') && $bundled_item->get_single_product_visibility() ? 'Yes' : 'No';
+					$cart_values[] = method_exists($bundled_item, 'get_cart_visibility') && $bundled_item->get_cart_visibility() ? 'Yes' : 'No';
+					$order_values[] = method_exists($bundled_item, 'get_order_visibility') && $bundled_item->get_order_visibility() ? 'Yes' : 'No';
+					$product_price_values[] = method_exists($bundled_item, 'get_single_product_price_visibility') && $bundled_item->get_single_product_price_visibility() ? 'Yes' : 'No';
+					$cart_price_values[] = method_exists($bundled_item, 'get_cart_price_visibility') && $bundled_item->get_cart_price_visibility() ? 'Yes' : 'No';
+					$order_price_values[] = method_exists($bundled_item, 'get_order_price_visibility') && $bundled_item->get_order_price_visibility() ? 'Yes' : 'No';
+					$thumb_values[] = method_exists($bundled_item, 'get_hide_thumbnail') && $bundled_item->get_hide_thumbnail() ? 'Yes' : 'No';
+					$override_values[] = method_exists($bundled_item, 'get_override_title') && $bundled_item->get_override_title() ? 'Yes' : 'No';
+					$description_values[] = method_exists($bundled_item, 'get_override_description') && $bundled_item->get_override_description() ? 'Yes' : 'No';
+					$override_title_values[] = method_exists($bundled_item, 'get_override_title_value') ? $bundled_item->get_override_title_value() : '';
+					$override_description_values[] = method_exists($bundled_item, 'get_override_description_value') ? $bundled_item->get_override_description_value() : '';
 				}
-
-				$optionals = implode('|', $optional_value);
-				WooCommerceExport::$export_instance->data[$id]['optional'] = $optionals;
-				$q_minimum = implode('|', $q_min);
-				WooCommerceExport::$export_instance->data[$id]['quantity_min'] = $q_minimum;
-				$q_maximum = implode('|', $q_max);
-				WooCommerceExport::$export_instance->data[$id]['quantity_max'] = $q_maximum;
-				$price_values = implode('|', $price_value);
-				WooCommerceExport::$export_instance->data[$id]['priced_individually'] = $price_values;
-				$discount_values = implode('|', $discount_value);
-				WooCommerceExport::$export_instance->data[$id]['discount'] = $discount_values;
-				$product_values = implode('|', $product_value);
-				//WooCommerceExport::$export_instance->data[$id]['product_details'] = $product_values;
-				WooCommerceExport::$export_instance->data[$id]['single_product_visibility'] = $product_values;
-				$cart_values = implode('|', $cart);
-				//WooCommerceExport::$export_instance->data[$id]['cart_checkout'] = $cart_values;
-				WooCommerceExport::$export_instance->data[$id]['cart_visibility'] = $cart_values;
-				$order_values = implode('|', $order);
-				//WooCommerceExport::$export_instance->data[$id]['order_details'] = $order_values;
-				WooCommerceExport::$export_instance->data[$id]['order_visibility'] = $order_values;
-				$thumbs = implode('|', $thumb);
-				WooCommerceExport::$export_instance->data[$id]['hide_thumbnail'] = $thumbs;
-				$overrides = implode('|', $override);
-				WooCommerceExport::$export_instance->data[$id]['override_title'] = $overrides;
-				$descriptions = implode('|', $description);
-				WooCommerceExport::$export_instance->data[$id]['override_description'] = $descriptions;
-				$override_titles = implode('|', $override_title_value);
-				WooCommerceExport::$export_instance->data[$id]['override_title_value'] = $override_titles;
-				$override_descriptions = implode('|', $override_description_value);
-				WooCommerceExport::$export_instance->data[$id]['override_description_value'] = $override_descriptions;
-
+		
+				// Prepare export data
+				WooCommerceExport::$export_instance->data[$id]['product_bundle_items'] = implode('|', $bundle_items) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['optional'] = implode('|', $optional_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['quantity_min'] = implode('|', $quantity_min) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['quantity_max'] = implode('|', $quantity_max) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['priced_individually'] = implode('|', $price_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['discount'] = implode('|', $discount_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['single_product_visibility'] = implode('|', $product_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['cart_visibility'] = implode('|', $cart_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['order_visibility'] = implode('|', $order_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['single_product_price_visibility'] = implode('|', $product_price_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['cart_price_visibility'] = implode('|', $cart_price_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['order_price_visibility'] = implode('|', $order_price_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['hide_thumbnail'] = implode('|', $thumb_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['override_title'] = implode('|', $override_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['override_description'] = implode('|', $description_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['override_title_value'] = implode('|', $override_title_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['override_description_value'] = implode('|', $override_description_values) ?? '';
+				WooCommerceExport::$export_instance->data[$id]['pb_sale_price'] = $bundle_product->get_sale_price() ?? '';
+				WooCommerceExport::$export_instance->data[$id]['pb_regular_price'] = $bundle_product->get_regular_price() ?? '';
+				WooCommerceExport::$export_instance->data[$id]['min_bundle_size'] = $min_bundle_size ?? '';
+				WooCommerceExport::$export_instance->data[$id]['max_bundle_size'] = $max_bundle_size ?? '';
+				WooCommerceExport::$export_instance->data[$id]['edit_in_cart'] = $edit_in_cart ?? '';
+				WooCommerceExport::$export_instance->data[$id]['layout'] = $layout ?? '';
+				WooCommerceExport::$export_instance->data[$id]['item_grouping'] = $item_grouping ?? '';
 			}
 		}	
 		

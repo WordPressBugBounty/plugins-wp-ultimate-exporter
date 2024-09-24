@@ -963,11 +963,11 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					}
 					ExportExtension::$post_export->getPostsMetaDataBasedOnRecordId($postId, $this->module, $this->optionalType);
 					$this->getTermsAndTaxonomies($postId, $this->module, $this->optionalType);
-
 					if ($this->module == 'WooCommerce') ExportExtension::$woocom_export->getProductData($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WooCommerceRefunds') ExportExtension::$woocom_export->getWooComCustomerUser($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WooCommerceOrders') ExportExtension::$woocom_export->getWooComOrderData($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WooCommerceVariations') ExportExtension::$woocom_export->getVariationData($postId, $this->module, $this->optionalType);
+					if($this->module == 'WooCommerceCoupons') ExportExtension::$woocom_export->getCouponsData($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WPeCommerce') ExportExtension::$ecom_export->getEcomData($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WPeCommerceCoupons') ExportExtension::$ecom_export->getEcomCouponData($postId, $this->module, $this->optionalType);
 
