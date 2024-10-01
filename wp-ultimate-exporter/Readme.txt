@@ -5,8 +5,8 @@ Tags: export, export woocommerce, export wordpress, product export, wordpress cs
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 2.6
-Version: 2.6
+Stable tag: 2.7
+Version: 2.7
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -15,21 +15,21 @@ Export WordPress and WooCommerce data with our powerful WordPress export plugin.
 
 == Description ==
 
-### 🔥 What's New in Version 2.6
-- **WooCommerce Coupons Export**: Unlock the ability to export coupons from your WooCommerce store and manage your promotions with ease!
+### 🔥 What's New in Version 2.7
+- This update introduces features such as export support for WC YITH Barcodes, YITH Cost of Goods plugins, and the Icon Picker field type from ACF.
 
 = Worried about losing your WordPress site data? Quickly and easily export your content now with this WordPress data exporter! =
 
-"Export All Posts, Products, Orders, Refunds & Users" is a robust add-on for WP Ultimate CSV Importer Free. It lets you back up, migrate, or securely store your content in a user-friendly format.
+"Export All Posts, Products, Orders, Refunds & Users" is a robust export add-on for WP Ultimate CSV Importer Free. It lets you back up, migrate, or securely store your WordPress content in a user-friendly file format.
 
-**Important Note:** The WP Ultimate Exporter, also known as "Export All Posts, Products, Orders, Refunds & Users" is an add-on that must be installed and activated separately after the [WP Ultimate CSV Importer free plugin](https://wordpress.org/plugins/wp-ultimate-csv-importer/).
+**Important Note:** The WP Ultimate Exporter, also known as "Export All Posts, Products, Orders, Refunds & Users" is an export add-on/tool that must be installed and activated separately after the [WP Ultimate CSV Importer free plugin](https://wordpress.org/plugins/wp-ultimate-csv-importer/).
 
 It stands out as a powerhouse export tool for WordPress. This plugin empowers you to export all your WordPress content—posts, pages, custom fields, users, and more—with ease, ensuring you have a copy of your data in a format that suits your needs.
 
 **Top Benefits**
 
 - **Effortless Export:** Simplify your export process with just two easy steps.
-- **Versatile Content Support:** Export a variety of content, including Posts, Pages, Custom Post Types, Custom Fields, Users, WooCommerce Products, Orders, Coupons, and Reviews.
+- **Versatile Content Support:** Export a variety of content, including Posts, Pages, Custom Post Types, Custom Fields, Users, WooCommerce Products, Orders, Coupons, Reviews, etc.,
 - **Export WordPress media:** WordPress media export is done separately or easily along with their post types.
 - **Custom Export Options:** Choose exactly what data to export—whether it's backing up only blog posts or extracting specific orders.
 - **Comprehensive Data Transfer:** Ensure all relevant data including custom fields and metadata tied to your post types for a through and complete data export.
@@ -37,7 +37,6 @@ It stands out as a powerhouse export tool for WordPress. This plugin empowers yo
 - **Error-Free Export:** The plugin automatically manages delimiters and quotes, ensuring your export is free from issues.
 - **Time-Based Data Export:** Export data from a specific time frame. For example, extract all orders created for a specific month or post published from the last quarter.
 - **Post Status Filtering:** Filter and export data based on post statuses like published, draft, or pending review.
-- **Post Status Filtering:** Filter and export your data based on different post statuses like published or draft.
 - **Author-Specific Content:** Extract content created by a specific author.
 
 = Multilingual Export: Introducing WPML & Polylang Export =
@@ -57,10 +56,10 @@ By integrating the Import User addon with the Exporter plugin, you can export Wo
 
 With the powerful combination of the Import WooCommerce add-on and the Exporter plugin, you can access the following features:
 
-* **Export Products & Variations:** Export all your products and their variations, complete with detailed information for easy migration or in-depth analysis.
+* **Export Products & Variations:** Export all your products and their variations, completely with detailed information for easy migration or in-depth analysis.
 * **Transfer Product Images:**  Ensure your product visuals are preserved by exporting product images alongside your associated product data.
 * **Preserve Product Categories:** Maintain your product organization intact by exporting product categories for a smooth import process on your new platform.
-* **Manage WooCommerce Orders:** For comprehensive order management, consider using the additional WooCommerce Order Export add-on. Easily export WooCommerce orders to CSV format, for further analysis or fulfillment needs.
+* **Manage WooCommerce Orders:** For comprehensive order management, consider using the Export add-on. Easily export WooCommerce orders to CSV format, for further analysis or fulfillment needs.
 * **Export WooCommerce Reviews:** Export reviews generated by users for each products on your WooCommerce store. Analyze every feedbacks to enhance your customer experience.
 * **Export Coupons from WooCommerce:** Extract coupons data from WooCommerce in CSV or any other file formats. This allows you to back up your promotional strategies, bulk edit coupon details, analyze the performance of your campaigns, and easily sharing it within your teams.
 
@@ -394,6 +393,13 @@ In the case of WooCommerce customers below listed user meta is exported:
 * Select 'Comments' module in the export tab to export comments. Provide filename, filetype, choose filters, and click export.
 
 == Changelog ==
+
+= 2.7 =
+
+Release date: 2024-10-01
+
+* Added: Support for YITH Barcodes and Cost of Goods plugins export.
+* Added: Export support for ACF Dashicon Field.
 
 = 2.6 =
 
@@ -754,6 +760,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+
+= 2.7 =
+
+* Upgrade now to unlock the new export feature for YITH Barcodes, YITH Cost of Goods plugins, and the ACF Icon Picker field.
 
 = 2.6 =
 

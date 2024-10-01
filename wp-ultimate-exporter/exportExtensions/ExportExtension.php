@@ -2402,12 +2402,16 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					{
 						$delimiter = preg_quote($this->delimiter, '/');
 						$enclosure = preg_quote($this->enclosure, '/');
-						if (is_array($value) && isset($value[0]) && $value[0] == '=') {
-							$value = "'" . $value;
-						}# Fix for the Comma separated vulnerabilities.
-						if ( isset($value) && is_string($value) && preg_match("/".$delimiter."|".$enclosure."|\n|\r/i", $value) ||isset($value[0]) && ($value[0] == ' ' ||isset($value) && substr($value, -1) == ' ') ) {
-							$value = str_replace($this->enclosure, $this->enclosure . $this->enclosure, $value);
-							$value = $this->enclosure . $value . $this->enclosure;
+				
+						if ( is_array($value) && isset($value[0]) && $value[0] == '=' ) {
+							$value = "'" . $value; // Fix for the comma-separated vulnerabilities.
+						}
+						// Add a check to ensure $value is not an object
+						if ( isset($value) && is_string($value) && preg_match("/".$delimiter."|".$enclosure."|\n|\r/i", $value) ||
+							 !is_object($value) && isset($value[0]) && ($value[0] == ' ' || isset($value) && substr($value, -1) == ' ') ) {
+							// Handle enclosure
+							$value = str_replace($this->enclosure, $this->enclosure.$this->enclosure, $value);
+							$value = $this->enclosure.$value.$this->enclosure;
 						}
 						else{
 							if(is_string($value) || is_numeric($value)){
