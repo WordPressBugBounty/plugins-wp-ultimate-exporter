@@ -171,6 +171,23 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				}
 				$module = ExportExtension::$post_export->import_post_types($module, $optional_type);
 			}
+			if(is_plugin_active('jet-engine/jet-engine.php')){
+				$get_slug_name = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}jet_post_types WHERE status = 'content-type'");
+				foreach($get_slug_name as $key=>$get_slug){
+					$value=$get_slug->slug;
+					$optional_type=$value;	
+					if($optionalType == $optional_type){
+						$table_name='jet_cct_'.$optional_type;
+						$get_menu= $wpdb->get_results("SELECT * FROM {$wpdb->prefix}$table_name");
+						if(is_array($get_menu))
+						$total = count($get_menu);
+						else
+						$total = 0;
+							echo wp_json_encode($total);
+							wp_die();
+					}
+				}
+			}
 			$get_post_ids = "select DISTINCT ID from $wpdb->posts";
 			$get_post_ids .= " where post_type = '$module'";
 
@@ -754,7 +771,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				}
 			}
 
-			$result = self::finalDataToExport($this->data, $this->module);
+			$result = self::finalDataToExport($this->data, $this->module,$this->optionalType);
 			if ($mode == null) self::proceedExport($result);
 			else return $result;
 		}
@@ -875,7 +892,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					}
 				}
 			}
-			$result = self::finalDataToExport($this->data, $this->module);
+			$result = self::finalDataToExport($this->data, $this->module,$this->optionalType);
 			if ($mode == null) self::proceedExport($result);
 			else return $result;
 		}
@@ -990,6 +1007,43 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					if ($this->optionalType == 'widgets') self::$instance->getWidgetData($postId, $this->headers);
 				}
 			}
+			$exp_module = $this->module; 
+			if(is_plugin_active('jet-engine/jet-engine.php')){
+				global $wpdb;
+				$get_slug_name = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}jet_post_types WHERE status = 'content-type'");
+		
+				foreach($get_slug_name as $key=>$get_slug){
+					$value = $get_slug->slug;
+					$optional_type = $value;
+					if($this->optionalType == $optional_type){
+						$table_name='jet_cct_'.$this->optionalType;										
+	
+						$jet_values = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}$table_name order by _ID asc limit $this->offset,$this->limit ");
+						if(!empty($jet_values)) {
+							foreach($jet_values as $jet_value) {
+								foreach($jet_value as $field_id => $value) {
+									$this->data[$jet_value->_ID][$field_id] = $value;					
+	
+								}
+							}
+						}
+						foreach($this->data as $id => $value){
+							ExportExtension::$post_export->getPostsMetaDataBasedOnRecordId($id, $this->module, $this->optionalType);
+						}
+					}
+				}
+				$slug = $this->optionalType;
+				$getarg = $wpdb->get_results("SELECT args from {$wpdb->prefix}jet_post_types where slug = '$slug' and status = 'content-type'",ARRAY_A);		
+				foreach($getarg as $key => $value){				
+					$arg_data = $value['args'];				
+					break;
+				}			
+				$arg_data = unserialize($arg_data);
+				if(!empty($arg_data) && array_key_exists('has_single',$arg_data) && $arg_data['has_single']){
+					$this->data[$id]['cct_single_post_title'] = $arg_data['related_post_type_title'] ?? '';
+					$this->data[$id]['cct_single_post_content'] = $arg_data['related_post_type_content'] ?? '';				
+				}
+			}
 			/** Added post format for 'standard' property */
 			if ($exp_module == 'Posts' || $exp_module == 'CustomPosts' || $exp_module == 'WooCommerce')
 			{
@@ -1028,7 +1082,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 
 			/** End post format */
-			$result = self::finalDataToExport($this->data, $this->module);
+			$result = self::finalDataToExport($this->data, $this->module,$this->optionalType);
 
 			if ($mode == null) self::proceedExport($result);
 			else return $result;
@@ -2142,8 +2196,8 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				 * @param $data     - Data to be export based on the requested information
 				 * @return array    - Final data to be export
 				 */
-				public function finalDataToExport($data, $module = false)
-				{
+				public function finalDataToExport ($data, $module = false , $optionalType = false) {
+					global $wpdb;				
 					$result = array();
 					foreach ($this->headers as $key => $value)
 					{
@@ -2161,14 +2215,37 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 							return $this->fetchCategoryFieldValue($data, $this->module);
 						}
 					}
-
-					foreach ($data as $recordId => $rowValue)
-					{
-						foreach ($this->headers as $hKey)
-						{
-							if (array_key_exists($hKey, $rowValue) && (!empty($rowValue[$hKey])))
-							{
-								$result[$recordId][$hKey] = $this->returnMetaValueAsCustomerInput($rowValue[$hKey], $hKey);
+					foreach ( $data as $recordId => $rowValue ) {
+						$optional_type = '';
+						if(is_plugin_active('jet-engine/jet-engine.php')){
+							global $wpdb;
+							$get_slug_name = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}jet_post_types WHERE status = 'content-type'");
+							foreach($get_slug_name as $key=>$get_slug){
+								$value=$get_slug->slug;
+								$optionaltype=$value;
+								if($optionalType == $optionaltype){
+									$optional_type=$optionaltype;
+								}
+							}
+						}
+	
+						foreach ($this->headers as $htemp => $hKey) {
+							if(is_array($rowValue) && array_key_exists($hKey, $rowValue) && (!empty($rowValue[$hKey])) ){
+								
+								if(!empty($optional_type) && $optionalType == $optional_type){								
+									if(is_plugin_active('jet-engine/jet-engine.php')){
+										$result = $this->getJetCCTValue($data,$optionalType);							
+										if(is_array($result)){
+											return $result;
+										}
+										else{
+											$result[$recordId][$hKey] = $this->returnMetaValueAsCustomerInput($rowValue[$hKey], $hKey);return $result;	
+										}		
+									}							
+								}		
+							else{
+									$result[$recordId][$hKey] = $this->returnMetaValueAsCustomerInput($rowValue[$hKey], $hKey);
+								}
 							}
 							else
 							{
@@ -2726,6 +2803,265 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 						array_push($bulk_category, $single_category);
 					}
 					return $bulk_category;
+				}
+				public function getJetCCTValue($data, $type, $data_type = false){
+					global $wpdb;
+					$jet_data = $this->JetEngineCCTFields($type);
+					$darray_value=array();		
+					$darray2 = array();		
+					$cct_rel = [];
+	
+					foreach ($data as $key => $dvalue) {
+						$get_guid ='';
+						$select_value='';
+						$checkbox_key_value='';
+						$checkbox_key_value1 ='';
+						foreach($dvalue as $dkey=>$value){						
+							if($dkey == '_ID'){
+								$darray[$dkey] = $value;
+							}
+							elseif($dkey =='cct_status'){
+								$darray[$dkey] = $value;
+							}
+	
+							//JET CCT Relation
+							if(!empty($jet_data)){
+								if(in_array($dkey,$this->headers) && !array_key_exists($dkey,$jet_data['JECCT']) ){							
+										$cct_rel[$key][$dkey] = $data[$key][$dkey];
+								}
+								
+								if(array_key_exists($dkey,$jet_data['JECCT'])){		
+									if(empty($value))					{
+										$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+									}
+									else {
+										if($jet_data['JECCT'][$dkey]['type'] == 'text'){	
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'textarea'){
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'colorpicker'){
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'iconpicker'){
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'radio'){
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'number'){
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'wysiwyg'){
+											$value = preg_replace('/\s+/', ' ', $value);
+	
+											// Minify the HTML content
+											$value = trim($value);
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'switcher'){
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'time'){
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $value;
+										} 
+										elseif( $jet_data['JECCT'][$dkey]['type'] == 'media'){									
+											if(is_numeric($value)){
+												if($value != 0) {
+												$get_guid_name = $wpdb->get_results("SELECT guid FROM {$wpdb->prefix}posts WHERE id = '$value'");									
+												foreach($get_guid_name as $media_key=>$value){
+													$darray1[$jet_data['JECCT'][$dkey]['name']]=$value->guid;
+												}
+											}
+											else {
+												
+												$darray1[$jet_data['JECCT'][$dkey]['name']]=$value;									
+											}
+											}
+											elseif(is_serialized($value)){
+												$media_value=unserialize($value);
+												$darray1[$jet_data['JECCT'][$dkey]['name']] = $media_value['url'];	
+											}
+											else{
+												$media_field_val=$value;
+												$darray1[$jet_data['JECCT'][$dkey]['name']]=$media_field_val;
+											}								
+										}
+										elseif( $jet_data['JECCT'][$dkey]['type'] == 'gallery'){
+											$get_meta_list = explode(',', $value);
+											$get_guid ='';
+											foreach($get_meta_list as $get_meta){	
+												if(is_numeric($get_meta)){
+													$get_guid_name = $wpdb->get_results("SELECT guid FROM {$wpdb->prefix}posts WHERE id = '$get_meta'");
+													foreach($get_guid_name as $gallery_key=>$value){		
+														$get_guid.=$value->guid.',';
+													}
+												}
+												elseif(is_serialized($get_meta)){
+													$gal_value=unserialize($get_meta);
+													foreach($gal_value as $gal_key1=>$gal_val){
+														$get_guid.=$gal_val['url'].',';
+													}	
+												}
+												else{
+													$get_guid .= $get_meta.',';
+												}
+											}
+											$darray1[$jet_data['JECCT'][$dkey]['name']]=rtrim($get_guid,',');
+										}						
+						
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'date'){
+											if(!empty($value)){
+												if(strpos($value, '-') !== FALSE){
+													$date_value= $value;
+												}else{
+													$date_value = date('Y-m-d', $value);
+												}
+											}
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $date_value;
+										}
+	
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'datetime-local'){
+											if(!empty($value)){
+												if(strpos($value, '-') !== FALSE){
+													$datetime_value = $value;
+												}else{
+													$datetime_value = date('Y-m-d H:i', $value);
+												}
+												$datetime_value = str_replace(' ', 'T', $datetime_value);
+											}
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $datetime_value;
+										}
+	
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'checkbox'){
+											if($jet_data['JECCT'][$dkey]['is_array'] == 1){									
+												$checkbox_value=unserialize($value);																		
+												if (is_array($checkbox_value)) {
+													$darray1[$jet_data['JECCT'][$dkey]['name']] = implode(',', $checkbox_value);
+												} else {
+													$darray1[$jet_data['JECCT'][$dkey]['name']] = ''; // or handle as needed
+												}
+											}
+											else{
+												$checkbox_value=unserialize($value);
+												$checkbox_key_value='';
+												foreach($checkbox_value as $check_key=>$check_val){
+													if($check_val == 'true'){
+														$checkbox_key_value.=$check_key.',';
+													}
+												}
+												$darray1[$jet_data['JECCT'][$dkey]['name']] = rtrim($checkbox_key_value,',');
+											}				
+										}
+						
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'posts'){
+											if(is_serialized($value)){
+												$jet_posts = unserialize($value);
+												$jet_posts_value='';
+												foreach($jet_posts as $posts_key=>$post_val){
+														$query = "SELECT post_title FROM {$wpdb->prefix}posts WHERE id ='{$post_val}' AND post_status='publish'";
+														$name = $wpdb->get_results($query);
+														if (!empty($name)) {
+															$jet_posts_value.=$name[0]->post_title.',';
+														}
+												}
+												$post_names=rtrim($jet_posts_value,',');
+											}
+											else{
+												$query = "SELECT post_title FROM {$wpdb->prefix}posts WHERE id ='{$value}' AND post_status='publish'";
+												$name = $wpdb->get_results($query);
+												if (!empty($name)) {
+													$post_names=$name[0]->post_title;
+												}
+											}
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = $post_names;
+										}
+										elseif($jet_data['JECCT'][$dkey]['type'] == 'select'){
+											if(is_serialized($value)){
+												$select_value='';
+												$gal_value=unserialize($value);
+												foreach($gal_value as $select_key=>$gal_val){
+													$select_value.=$gal_val.',';
+												}	
+											}
+											else{
+												$select_val=$value;
+												$select_value=$select_val;
+											}
+	
+											$darray1[$jet_data['JECCT'][$dkey]['name']] = rtrim($select_value,',');
+										}  
+									}
+								}
+												
+							}											
+						}																
+						if(!empty($darray1) && empty($darray2)){
+						$data_array_values=array_merge($darray,$darray1);
+						}
+						elseif(empty($darray1) && !empty($darray2)){
+							$data_array_values=array_merge($darray,$darray2);
+						}
+						else if (!empty($darray1) && !empty($darray2)){
+							$data_array_values=array_merge($darray,$darray1,$darray2);
+						}
+
+						$darray_value[$key]=$data_array_values;												
+					}	
+							//CCT Relation
+							if(!empty($cct_rel) && !empty($darray_value)){
+							foreach($cct_rel as $id => $value){
+								unset($value['_ID']);
+								unset($value['cct_status']);
+								$get_val = $darray_value[$id];							
+								$all_data[$id] = array_merge($get_val,$value);
+							}	
+							$darray_value = $all_data;
+						}		
+						//End CCT Relation	
+						//For correct the CSV columns 					
+						foreach($this->headers as $row_header){
+						foreach($darray_value as $key => $value){
+							if(!empty($value)){
+								if(array_key_exists($row_header,$value)){
+								$new_data[$key][$row_header] = $value[$row_header];
+								}
+								else {
+									$new_data[$key][$row_header] = $value[$row_header];
+								}
+							}
+						} 
+						}	
+						$darray_value = $new_data;	
+					//added
+					if(!empty($darray_value)){	
+						return $darray_value;
+					}
+					else{
+						return ;
+					}	
+				}
+				public function JetEngineCCTFields($type){
+					global $wpdb;	
+					$jet_field = array();
+					$customFields = [];
+					$get_meta_fields = $wpdb->get_results($wpdb->prepare("select id, meta_fields from {$wpdb->prefix}jet_post_types where slug = %s and status = %s", $type, 'content-type'));
+					
+					if(!empty($get_meta_fields)){
+						$unserialized_meta = maybe_unserialize($get_meta_fields[0]->meta_fields);
+				
+						foreach($unserialized_meta as $jet_key => $jet_value){
+							$customFields["JECCT"][ $jet_value['name']]['label'] = $jet_value['title'];
+							$customFields["JECCT"][ $jet_value['name']]['name']  = $jet_value['name'];
+							$customFields["JECCT"][ $jet_value['name']]['type']  = $jet_value['type'];
+							$customFields["JECCT"][ $jet_value['name']]['options'] = isset($jet_value['options']) ? $jet_value['options'] : '';
+							$customFields["JECCT"][ $jet_value['name']]['is_multiple'] = isset($jet_value['is_multiple']) ? $jet_value['is_multiple'] : '';
+							$customFields["JECCT"][ $jet_value['name']]['is_array'] = isset($jet_value['is_array']) ? $jet_value['is_array'] : '';
+							$jet_field[] = $jet_value['name'];
+						}
+					}
+					return $customFields;	
 				}
 
 				public function returnMetaValueAsCustomerInput($meta_value, $header = false)

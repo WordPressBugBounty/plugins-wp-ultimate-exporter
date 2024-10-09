@@ -5,26 +5,22 @@ Tags: export, export woocommerce, export wordpress, product export, wordpress cs
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 2.7
-Version: 2.7
+Stable tag: 2.7.1
+Version: 2.7.1
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
-Export WordPress and WooCommerce data with our powerful WordPress export plugin. Save as CSV or XML for easy backup, migration and flexible storage.
-
+Export WordPress and WooCommerce websites data with our powerful Export plugin. Save records as CSV or XML files for easy backup, migration and flexible storage.
 
 == Description ==
 
-### 🔥 What's New in Version 2.7
-- This update introduces features such as export support for WC YITH Barcodes, YITH Cost of Goods plugins, and the Icon Picker field type from ACF.
+= Worried about losing your WordPress site data? Quickly and easily export your content now with this Best WordPress Data Exporter! =
 
-= Worried about losing your WordPress site data? Quickly and easily export your content now with this WordPress data exporter! =
+"Export All Posts, Products, Orders, Refunds & Users" is a robust export add-on of WP Ultimate CSV Importer Free plugin. It lets you back up, migrate, or securely store your WordPress content in a user-friendly file formats.
 
-"Export All Posts, Products, Orders, Refunds & Users" is a robust export add-on for WP Ultimate CSV Importer Free. It lets you back up, migrate, or securely store your WordPress content in a user-friendly file format.
+**Important Note:** The WP Ultimate Exporter, also known as "Export All Posts, Products, Orders, Refunds & Users" is an export tool that must be installed and activated after the [WP Ultimate CSV Importer free plugin](https://wordpress.org/plugins/wp-ultimate-csv-importer/).
 
-**Important Note:** The WP Ultimate Exporter, also known as "Export All Posts, Products, Orders, Refunds & Users" is an export add-on/tool that must be installed and activated separately after the [WP Ultimate CSV Importer free plugin](https://wordpress.org/plugins/wp-ultimate-csv-importer/).
-
-It stands out as a powerhouse export tool for WordPress. This plugin empowers you to export all your WordPress content—posts, pages, custom fields, users, and more—with ease, ensuring you have a copy of your data in a format that suits your needs.
+The plugin stands out as a powerhouse export tool for WordPress. It empowers you to export all your WordPress content—posts, pages, custom fields, users, and more—with ease, ensuring you have a copy of your data in a format that suits your needs.
 
 **Top Benefits**
 
@@ -39,13 +35,16 @@ It stands out as a powerhouse export tool for WordPress. This plugin empowers yo
 - **Post Status Filtering:** Filter and export data based on post statuses like published, draft, or pending review.
 - **Author-Specific Content:** Extract content created by a specific author.
 
+### 🔥 What's New in Version 2.7.1
+- In this update, we’ve expanded JetEngine plugin compatibility to allow exporting fields data from Custom Content Types (CCT). Download the latest version and try it out – we’d love to hear your feedback!
+
 = Multilingual Export: Introducing WPML & Polylang Export =
 
 If you're managing multilingual WordPress sites using plugins like Polylang or WPML, this multilingual data export plugin is a game-changer. Export content managed in various languages, making it easier to migrate your multilingual data in CSV or XML formats.
 
 = WordPress Users Export With Ultimate Exporter Add-On =
 
-By integrating the Import User addon with the Exporter plugin, you can export WordPress Users. Also you gain the ability to take control of your WordPress user base to:
+By integrating the [Import User addon](https://wordpress.org/plugins/import-users) with the Exporter plugin, you can export WordPress Users. Also you gain the ability to take control of your WordPress user base to:
     * **Generate Complete User Lists:** Create a comprehensive list of all your WordPress users, including usernames, emails, and roles.
     * **Export Targeted User Data:** Tailor your exports to specific needs by selecting and exporting only the user data sets you require.
     * **Capture Meta Data & Custom Fields:** Ensure no data is missed by exporting user meta data and custom fields, for a complete user profile snapshot.
@@ -54,7 +53,7 @@ By integrating the Import User addon with the Exporter plugin, you can export Wo
 
 = WooCommerce Export: Maximize Your Capabilities with WooCommerce Add-On =
 
-With the powerful combination of the Import WooCommerce add-on and the Exporter plugin, you can access the following features:
+With the powerful combination of the [Import WooCommerce add-on](https://wordpress.org/plugins/import-woocommerce) and the Exporter plugin, you can access the following features:
 
 * **Export Products & Variations:** Export all your products and their variations, completely with detailed information for easy migration or in-depth analysis.
 * **Transfer Product Images:**  Ensure your product visuals are preserved by exporting product images alongside your associated product data.
@@ -88,7 +87,6 @@ Don't wait for disaster to strike! Secure your WordPress content today with the 
 Give a try to Ultimate Exporter Premium for schedule wordpress exports or automatic wordpress exports feature and also unlock advanced filter options. Visit our website to buy [WP Ultimate Exporter Pro](https://www.smackcoders.com/wp-ultimate-exporter.html?utm_source=wordpress&utm_medium=readme&utm_campaign=free_exporter)
 
 The Pro version lets you export advanced custom fields related with any post types which are limited in free version. Export Toolset types, JetEngine, Meta Box, ACF and more plugins fields data.
-
 
 = Try it in action =
 
@@ -393,6 +391,12 @@ In the case of WooCommerce customers below listed user meta is exported:
 * Select 'Comments' module in the export tab to export comments. Provide filename, filetype, choose filters, and click export.
 
 == Changelog ==
+
+= 2.7.1 =
+
+Release date: 2024-10-09
+
+* Added: New Export feature for JetEngine Custom Content Types (CCT).
 
 = 2.7 =
 
@@ -760,6 +764,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+
+= 2.7.1 =
+
+* Try New Export feature added for JetEngine Custom Content Types (CCT).
 
 = 2.7 =
 

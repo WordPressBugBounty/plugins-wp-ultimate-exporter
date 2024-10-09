@@ -360,6 +360,18 @@ class PostExport extends ExportExtension{
 				$result = $wpdb->get_col($query_with_offset_limit);
 			}
 		}
+		if(is_plugin_active('jet-engine/jet-engine.php')){
+			$get_slug_name = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}jet_post_types WHERE status = 'content-type'");
+			foreach($get_slug_name as $key=>$get_slug){
+				$value=$get_slug->slug;
+				$optional_type=$value;	
+				if($optionalType ==$optional_type){
+					$table_name='jet_cct_'.$optional_type;
+					$get_total_row_count= $wpdb->get_results("SELECT _ID FROM {$wpdb->prefix}$table_name ");
+					self::$export_instance->totalRowCount = count($get_total_row_count);
+				}
+			}
+		}
 
 		// Get sticky post alone on the specific post status
 		if(isset($conditions['specific_period']['is_check']) && isset($conditions['specific_status']['is_check']) && $conditions['specific_status']['is_check'] == 'true') {
