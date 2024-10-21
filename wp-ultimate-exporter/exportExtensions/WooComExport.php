@@ -50,68 +50,68 @@ class WooCommerceExport extends ExportExtension{
 	public function getCouponsData($id, $type, $optionalType){
 		$coupon_id = $id;
 		$c = new \WC_Coupon($coupon_id);
-			$DiscountType = $c->get_discount_type();	
-			$CouponAmount = $c->get_amount();
-			$IndividualUse = $c->get_individual_use();
-			$ProductIDs = $c->get_product_ids();
-			$ExcludeProductIDs = $c->get_excluded_product_ids(); 
-			$UsageLimit = $c->get_usage_limit();
-			$UsageLimitPerUser = $c->get_usage_limit_per_user();
-			$LimitUsageToXItems = $c->get_limit_usage_to_x_items();
-			$ExpiryDate = $c->get_date_expires();
-			$FreeShipping = $c->get_free_shipping();
-			$ExcludeSaleItems = $c->get_exclude_sale_items();
-			$MinimumAmount = $c->get_minimum_amount();
-			$MaximumAmount = $c->get_maximum_amount();
-			$CustomerEmail = $c->get_email_restrictions();
-			$ExcludedProductCategories = $c->get_excluded_product_categories();
-			$ProductCategories = $c->get_product_categories();
+		$DiscountType = $c->get_discount_type();	
+		$CouponAmount = $c->get_amount();
+		$IndividualUse = $c->get_individual_use();
+		$ProductIDs = $c->get_product_ids();
+		$ExcludeProductIDs = $c->get_excluded_product_ids(); 
+		$UsageLimit = $c->get_usage_limit();
+		$UsageLimitPerUser = $c->get_usage_limit_per_user();
+		$LimitUsageToXItems = $c->get_limit_usage_to_x_items();
+		$ExpiryDate = $c->get_date_expires();
+		$FreeShipping = $c->get_free_shipping();
+		$ExcludeSaleItems = $c->get_exclude_sale_items();
+		$MinimumAmount = $c->get_minimum_amount();
+		$MaximumAmount = $c->get_maximum_amount();
+		$CustomerEmail = $c->get_email_restrictions();
+		$ExcludedProductCategories = $c->get_excluded_product_categories();
+		$ProductCategories = $c->get_product_categories();
 
-			$product_Ids = array(); 
-			$Exclude_Product_IDs =array();
-			$product_cat = array();
-			$exclude_cat = array();
-			$cus_email =  array();
-			foreach ($ProductCategories as $p_IDs) {
-				$product_cat[] = $p_IDs;
-			}
-			foreach ($ExcludedProductCategories as $p_IDs) {
-				$exclude_cat[] = $p_IDs;
-			}
-
-			foreach ($CustomerEmail as $p_IDs) {
-				$cus_email[] = $p_IDs;
-			}
-
-			foreach ($ProductIDs as $p_IDs) {
-				$product_Ids[] = $p_IDs;
-			}
-			foreach($ExcludeProductIDs as $Exclude_PIds){
-				$Exclude_Product_IDs[] = $Exclude_PIds;
-			}
-
-			WooCommerceExport::$export_instance->data[$id]['exclude_product_categories'] = !empty($exclude_cat) ? implode(',', $exclude_cat) : '';
-			WooCommerceExport::$export_instance->data[$id]['customer_email'] = !empty($cus_email) ? implode(',', $cus_email) : '';
-			WooCommerceExport::$export_instance->data[$id]['product_categories'] = !empty($product_cat) ? implode(',', $product_cat) : '';
-
-
-
-			WooCommerceExport::$export_instance->data[$id]['discount_type'] = $DiscountType;
-			WooCommerceExport::$export_instance->data[$id]['coupon_amount'] = $CouponAmount;
-			WooCommerceExport::$export_instance->data[$id]['individual_use'] = $IndividualUse ? 'yes' : 'no';
-			WooCommerceExport::$export_instance->data[$id]['usage_limit'] = $UsageLimit;
-			WooCommerceExport::$export_instance->data[$id]['usage_limit_per_user'] = $UsageLimitPerUser;
-			WooCommerceExport::$export_instance->data[$id]['limit_usage_to_x_items'] = $LimitUsageToXItems;
-			WooCommerceExport::$export_instance->data[$id]['expiry_date'] = $ExpiryDate ? $ExpiryDate->date('Y-m-d H:i:s') : null;
-			WooCommerceExport::$export_instance->data[$id]['free_shipping'] = $FreeShipping ? 'yes' : 'no';
-			WooCommerceExport::$export_instance->data[$id]['exclude_sale_items'] = $ExcludeSaleItems ? 'yes' : 'no';
-			WooCommerceExport::$export_instance->data[$id]['minimum_amount'] = $MinimumAmount;
-			WooCommerceExport::$export_instance->data[$id]['maximum_amount'] = $MaximumAmount;	
-			// Handle the product IDs and excluded product IDs with implode only if they are not empty
-			WooCommerceExport::$export_instance->data[$id]['product_ids'] = !empty($product_Ids) ? implode(',', $product_Ids) : '';
-			WooCommerceExport::$export_instance->data[$id]['exclude_product_ids'] = !empty($Exclude_Product_IDs) ? implode(',', $Exclude_Product_IDs) : '';
-			
+		$product_Ids = array(); 
+		$Exclude_Product_IDs =array();
+		$product_cat = array();
+		$exclude_cat = array();
+		$cus_email =  array();
+		foreach ($ProductCategories as $p_IDs) {
+			$product_cat[] = $p_IDs;
 		}
+		foreach ($ExcludedProductCategories as $p_IDs) {
+			$exclude_cat[] = $p_IDs;
+		}
+
+		foreach ($CustomerEmail as $p_IDs) {
+			$cus_email[] = $p_IDs;
+		}
+
+		foreach ($ProductIDs as $p_IDs) {
+			$product_Ids[] = $p_IDs;
+		}
+		foreach($ExcludeProductIDs as $Exclude_PIds){
+			$Exclude_Product_IDs[] = $Exclude_PIds;
+		}
+
+		WooCommerceExport::$export_instance->data[$id]['exclude_product_categories'] = !empty($exclude_cat) ? implode(',', $exclude_cat) : '';
+		WooCommerceExport::$export_instance->data[$id]['customer_email'] = !empty($cus_email) ? implode(',', $cus_email) : '';
+		WooCommerceExport::$export_instance->data[$id]['product_categories'] = !empty($product_cat) ? implode(',', $product_cat) : '';
+
+
+
+		WooCommerceExport::$export_instance->data[$id]['discount_type'] = $DiscountType;
+		WooCommerceExport::$export_instance->data[$id]['coupon_amount'] = $CouponAmount;
+		WooCommerceExport::$export_instance->data[$id]['individual_use'] = $IndividualUse ? 'yes' : 'no';
+		WooCommerceExport::$export_instance->data[$id]['usage_limit'] = $UsageLimit;
+		WooCommerceExport::$export_instance->data[$id]['usage_limit_per_user'] = $UsageLimitPerUser;
+		WooCommerceExport::$export_instance->data[$id]['limit_usage_to_x_items'] = $LimitUsageToXItems;
+		WooCommerceExport::$export_instance->data[$id]['expiry_date'] = $ExpiryDate ? $ExpiryDate->date('Y-m-d H:i:s') : null;
+		WooCommerceExport::$export_instance->data[$id]['free_shipping'] = $FreeShipping ? 'yes' : 'no';
+		WooCommerceExport::$export_instance->data[$id]['exclude_sale_items'] = $ExcludeSaleItems ? 'yes' : 'no';
+		WooCommerceExport::$export_instance->data[$id]['minimum_amount'] = $MinimumAmount;
+		WooCommerceExport::$export_instance->data[$id]['maximum_amount'] = $MaximumAmount;	
+		// Handle the product IDs and excluded product IDs with implode only if they are not empty
+		WooCommerceExport::$export_instance->data[$id]['product_ids'] = !empty($product_Ids) ? implode(',', $product_Ids) : '';
+		WooCommerceExport::$export_instance->data[$id]['exclude_product_ids'] = !empty($Exclude_Product_IDs) ? implode(',', $Exclude_Product_IDs) : '';
+
+	}
 	public function getWooComOrderData($id, $type, $optional)
 	{ 
 		$order = wc_get_order($id);
@@ -119,7 +119,7 @@ class WooCommerceExport extends ExportExtension{
 		$orderid = self::$export_instance->data[$id]['ID'];
 		WooCommerceExport::$export_instance->data[$id]['ORDERID'] = $orderid;
 		//fetch the order data
-        $date_created_object = $order_data['date_created'];
+		$date_created_object = $order_data['date_created'];
 		$formatted_date_time = $date_created_object->date('m/d/Y H:i:s');
 		WooCommerceExport::$export_instance->data[$id]['order_date'] = $formatted_date_time;
 		$customer_note = $order_data['customer_note'];
@@ -128,23 +128,23 @@ class WooCommerceExport extends ExportExtension{
 		$order_status = $order_data['status'];
 		WooCommerceExport::$export_instance->data[$id]['order_status'] = 'wc-'.$order_status;
 		$_billing_first_name  = $billing_details['first_name'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_first_name'] = $_billing_first_name;
-        $_billing_last_name   = $billing_details['last_name'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_last_name'] = $_billing_last_name;
-        $_billing_company     = $billing_details['company'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_company'] = $_billing_company;
-        $_billing_address_1   = $billing_details['address_1'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_address_1'] = $_billing_address_1;
-        $_billing_address_2   = $billing_details['address_2'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_address_2'] = $_billing_address_2;
-        $_billing_city        = $billing_details['city'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_city'] = $_billing_city;
-        $_billing_state       = $billing_details['state'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_state'] = $_billing_state;
-        $_billing_postcode    = $billing_details['postcode'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_postcode'] = $_billing_postcode;
-        $_billing_country     = $billing_details['country'];
-        WooCommerceExport::$export_instance->data[$id]['_billing_country'] = $_billing_country;
+		WooCommerceExport::$export_instance->data[$id]['_billing_first_name'] = $_billing_first_name;
+		$_billing_last_name   = $billing_details['last_name'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_last_name'] = $_billing_last_name;
+		$_billing_company     = $billing_details['company'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_company'] = $_billing_company;
+		$_billing_address_1   = $billing_details['address_1'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_address_1'] = $_billing_address_1;
+		$_billing_address_2   = $billing_details['address_2'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_address_2'] = $_billing_address_2;
+		$_billing_city        = $billing_details['city'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_city'] = $_billing_city;
+		$_billing_state       = $billing_details['state'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_state'] = $_billing_state;
+		$_billing_postcode    = $billing_details['postcode'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_postcode'] = $_billing_postcode;
+		$_billing_country     = $billing_details['country'];
+		WooCommerceExport::$export_instance->data[$id]['_billing_country'] = $_billing_country;
 		$_order_currency = $order_data['currency'];
 		WooCommerceExport::$export_instance->data[$id]['_order_currency'] = $_order_currency;
 		$_order_shipping_tax = $order_data['shipping_tax'];
@@ -155,19 +155,19 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['_order_tax'] = $_order_tax;	
 		$_customer_user = $order_data['customer_id'];
 		if($_customer_user != 0){
-		 $user_data = get_userdata($_customer_user);
-		 $user_email = $user_data->user_email;
-		 WooCommerceExport::$export_instance->data[$id]['_customer_user'] = $user_email ;
+			$user_data = get_userdata($_customer_user);
+			$user_email = $user_data->user_email;
+			WooCommerceExport::$export_instance->data[$id]['_customer_user'] = $user_email ;
 		}	
 		$_billing_email = $billing_details['email'];
 		WooCommerceExport::$export_instance->data[$id]['_billing_email'] = $_billing_email;
 
 		$_billing_phone = $billing_details['phone'];
 		WooCommerceExport::$export_instance->data[$id]['_billing_phone'] = $_billing_phone;
-		
+
 		$_shipping_first_name = $order_data['shipping']['first_name'];
 		WooCommerceExport::$export_instance->data[$id]['_shipping_first_name'] = $_shipping_first_name;
-		
+
 		$_shipping_last_name = $order_data['shipping']['last_name'];
 		WooCommerceExport::$export_instance->data[$id]['_shipping_last_name'] = $_shipping_last_name;
 
@@ -182,7 +182,7 @@ class WooCommerceExport extends ExportExtension{
 
 		$_shipping_city = $order_data['shipping']['city'];
 		WooCommerceExport::$export_instance->data[$id]['_shipping_city'] = $_shipping_city;
-		
+
 		$_shipping_state = $order_data['shipping']['state'];
 		WooCommerceExport::$export_instance->data[$id]['_shipping_state'] = $_shipping_state;
 
@@ -196,14 +196,14 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['_shipping_phone'] = $_shipping_phone;
 
 		$_order_total = $order_data['total'];
-	    WooCommerceExport::$export_instance->data[$id]['_order_total'] = $_order_total;
-		
+		WooCommerceExport::$export_instance->data[$id]['_order_total'] = $_order_total;
+
 		$_cart_discount = $order_data['discount_total'];
 		WooCommerceExport::$export_instance->data[$id]['_cart_discount'] = $_cart_discount;
 
 		$_cart_discount_tax = $order_data['discount_tax'];
 		WooCommerceExport::$export_instance->data[$id]['_cart_discount_tax'] = $_cart_discount_tax;
-		
+
 		$_payment_method = $order_data['payment_method'];
 		WooCommerceExport::$export_instance->data[$id]['_payment_method'] = $_payment_method;
 
@@ -220,101 +220,161 @@ class WooCommerceExport extends ExportExtension{
 
 		$_transaction_id = $order_data['transaction_id'];
 		WooCommerceExport::$export_instance->data[$id]['_transaction_id'] = $_transaction_id;
-	    $line_items = $order->get_items();
-        $mycoupon = $order->get_coupons();
-   
-        if (!empty($mycoupon)) {
-            foreach ($mycoupon as $coupon) {
-             $coupon_code = $coupon->get_code();
-        }
-        }
-	if(!empty($line_items)){
-		foreach ($line_items as $item_id => $item) {
-			$item_names[] = $item->get_name();
-			$product_type[] = $item->get_type();
-			$variation_id[] = $item->get_variation_id();
-			$product_id[] = $item->get_product_id();
-			$subtotal[] = $item->get_subtotal();
-			$subtotal_tax[] = $item->get_subtotal_tax();
-			$total[] = $item->get_total();
-			$total_tax[] = $item->get_total_tax();
-			$item_tax_data[] = $item->get_taxes();
-			if (!empty($item_tax_data) && is_array($item_tax_data)) {
-				if(!empty($item_tax_data[0]['total']) || !empty($item_tax_data[0]['subtotal'])){
-					$line_tax[] = implode(',', $item_tax_data[0]['total']);
-					$line_tax[] = implode(',', $item_tax_data[0]['subtotal']);
-				}else{
-					$line_tax = array();
-				}
-			}	
-			$tax_class[] = $item->get_tax_class();
-			$quantity[] = $item->get_quantity();
+		$line_items = $order->get_items();
+		$mycoupon = $order->get_coupons();
+
+		if (!empty($mycoupon)) {
+			foreach ($mycoupon as $coupon) {
+				$coupon_code = $coupon->get_code();
+			}
 		}
-		if (!empty($coupon_code)) {
-		$item_names[] = $coupon_code;
-		$product_type[] = 'coupon';
+		if(!empty($line_items)){
+			foreach ($line_items as $item_id => $item) {
+				$item_names[] = $item->get_name();
+				$product_type[] = $item->get_type();
+				$variation_id[] = $item->get_variation_id();
+				$product_id[] = $item->get_product_id();
+				$subtotal[] = $item->get_subtotal();
+				$subtotal_tax[] = $item->get_subtotal_tax();
+				$total[] = $item->get_total();
+				$total_tax[] = $item->get_total_tax();
+				$item_tax_data[] = $item->get_taxes();
+				if (!empty($item_tax_data) && is_array($item_tax_data)) {
+					if(!empty($item_tax_data[0]['total']) || !empty($item_tax_data[0]['subtotal'])){
+						$line_tax[] = implode(',', $item_tax_data[0]['total']);
+						$line_tax[] = implode(',', $item_tax_data[0]['subtotal']);
+					}else{
+						$line_tax = array();
+					}
+				}	
+				$tax_class[] = $item->get_tax_class();
+				$quantity[] = $item->get_quantity();
+			}
+			if (!empty($coupon_code)) {
+				$item_names[] = $coupon_code;
+				$product_type[] = 'coupon';
+			}
+			//itemdata
+			self::$export_instance->data[$id]['item_name'] = implode(',', $item_names);
+			self::$export_instance->data[$id]['item_type'] = implode(',', $product_type);
+			self::$export_instance->data[$id]['item_variation_id'] = implode(',', $variation_id);
+			self::$export_instance->data[$id]['item_product_id']  = implode(',', $product_id);
+			self::$export_instance->data[$id]['item_line_subtotal'] = implode(',', $subtotal);
+			self::$export_instance->data[$id]['item_line_subtotal_tax'] = implode(',', $subtotal_tax);
+			self::$export_instance->data[$id]['item_line_total'] = implode(',', $total);
+			self::$export_instance->data[$id]['item_line_tax'] = implode(',', $total_tax);
+			self::$export_instance->data[$id]['item_line_tax_data'] = implode(',', $line_tax);
+			self::$export_instance->data[$id]['item_tax_class'] = implode(',', $tax_class);
+			self::$export_instance->data[$id]['item_qty'] = implode(',', $quantity);
 		}
-	//itemdata
-	self::$export_instance->data[$id]['item_name'] = implode(',', $item_names);
-	self::$export_instance->data[$id]['item_type'] = implode(',', $product_type);
-	self::$export_instance->data[$id]['item_variation_id'] = implode(',', $variation_id);
-	self::$export_instance->data[$id]['item_product_id']  = implode(',', $product_id);
-	self::$export_instance->data[$id]['item_line_subtotal'] = implode(',', $subtotal);
-	self::$export_instance->data[$id]['item_line_subtotal_tax'] = implode(',', $subtotal_tax);
-	self::$export_instance->data[$id]['item_line_total'] = implode(',', $total);
-	self::$export_instance->data[$id]['item_line_tax'] = implode(',', $total_tax);
-	self::$export_instance->data[$id]['item_line_tax_data'] = implode(',', $line_tax);
-	self::$export_instance->data[$id]['item_tax_class'] = implode(',', $tax_class);
-	self::$export_instance->data[$id]['item_qty'] = implode(',', $quantity);
-	}
-	//fee data
-	$fees = $order->get_fees();
-    if(!empty($fees)){
-		foreach ($fees as $fee) {
-			$fee_name[] = $fee->get_name();
-			$fee_type[] = $fee->get_type(); // Assuming there's a get_type() method; check the documentation
-            $fee_tax_class[] = $fee->get_tax_class();
-            $fee_line_total[] = $fee->get_total();
-            $fee_line_tax[] = $fee->get_total_tax();
-			// $fee_line_subtotal[] = $fee->get_subtotal();
-            // $fee_line_subtotal_tax[] = $fee->get_subtotal_tax();
-            $tax_data = $fee->get_taxes();
+		//fee data
+		$fees = $order->get_fees();
+		if(!empty($fees)){
+			foreach ($fees as $fee) {
+				$fee_name[] = $fee->get_name();
+				$fee_type[] = $fee->get_type(); // Assuming there's a get_type() method; check the documentation
+				$fee_tax_class[] = $fee->get_tax_class();
+				$fee_line_total[] = $fee->get_total();
+				$fee_line_tax[] = $fee->get_total_tax();
+				// $fee_line_subtotal[] = $fee->get_subtotal();
+				// $fee_line_subtotal_tax[] = $fee->get_subtotal_tax();
+				$tax_data = $fee->get_taxes();
 				if(!empty($tax_data['total'])){
 					$fee_line_tax_data[] = $tax_data['total'];
 				}else{
 					$fee_line_tax_data = array();
 				}	
+			}
+			//fee data
+			self::$export_instance->data[$id]['fee_name'] = implode(',', $fee_name);
+			self::$export_instance->data[$id]['fee_type'] = implode(',', $fee_type);
+			//self::$export_instance->data[$id]['fee_line_subtotal'] = implode(',', $fee_line_subtotal);
+			//self::$export_instance->data[$id]['fee_line_subtotal_tax'] = implode(',', $fee_line_subtotal_tax);
+			self::$export_instance->data[$id]['fee_line_total'] = implode(',', $fee_line_total);
+			self::$export_instance->data[$id]['fee_line_tax'] = implode(',', $fee_line_tax);
+			self::$export_instance->data[$id]['fee_line_tax_data'] = implode(',',$fee_line_tax_data );	
+			self::$export_instance->data[$id]['fee_tax_class'] = implode(',', $fee_tax_class);
 		}
-	//fee data
-	self::$export_instance->data[$id]['fee_name'] = implode(',', $fee_name);
-	self::$export_instance->data[$id]['fee_type'] = implode(',', $fee_type);
-	//self::$export_instance->data[$id]['fee_line_subtotal'] = implode(',', $fee_line_subtotal);
-	//self::$export_instance->data[$id]['fee_line_subtotal_tax'] = implode(',', $fee_line_subtotal_tax);
-	self::$export_instance->data[$id]['fee_line_total'] = implode(',', $fee_line_total);
-	self::$export_instance->data[$id]['fee_line_tax'] = implode(',', $fee_line_tax);
-	self::$export_instance->data[$id]['fee_line_tax_data'] = implode(',',$fee_line_tax_data );	
-	self::$export_instance->data[$id]['fee_tax_class'] = implode(',', $fee_tax_class);
-	}
-	//shipment data fetch
-	$shipping_methods = $order->get_shipping_methods();
-	if(!empty($shipping_methods)){
-		foreach ($shipping_methods as $shipping_method) {
-			$shipment_name[] = $shipping_method->get_method_title(); 
-			$shipment_method_id[] = $shipping_method->get_method_id(); 
-			$shipment_cost[] = $shipping_method->get_total(); 
-			$shipment_taxe_data = $shipping_method->get_taxes(); 
+		//shipment data fetch
+		$shipping_methods = $order->get_shipping_methods();
+		if(!empty($shipping_methods)){
+			foreach ($shipping_methods as $shipping_method) {
+				$shipment_name[] = $shipping_method->get_method_title(); 
+				$shipment_method_id[] = $shipping_method->get_method_id(); 
+				$shipment_cost[] = $shipping_method->get_total(); 
+				$shipment_taxe_data = $shipping_method->get_taxes(); 
 				if(!empty($shipment_taxe_data['total'])){
 					$shipment_taxes[] = $shipment_taxe_data['total'];
 				}else{
 					$shipment_taxes = array();
 				}	
+			}
+			// shipment data
+			self::$export_instance->data[$id]['shipment_name'] = implode(',', $shipment_name);
+			self::$export_instance->data[$id]['shipment_method_id'] = implode(',', $shipment_method_id);
+			self::$export_instance->data[$id]['shipment_cost'] = implode(',', $shipment_cost);	
+			self::$export_instance->data[$id]['shipment_taxes'] = implode(',', $shipment_taxes);
 		}
-		// shipment data
-	self::$export_instance->data[$id]['shipment_name'] = implode(',', $shipment_name);
-	self::$export_instance->data[$id]['shipment_method_id'] = implode(',', $shipment_method_id);
-	self::$export_instance->data[$id]['shipment_cost'] = implode(',', $shipment_cost);	
-	self::$export_instance->data[$id]['shipment_taxes'] = implode(',', $shipment_taxes);
+
+		if(is_plugin_active('advanced-product-fields-for-woocommerce/advanced-product-fields-for-woocommerce.php') ) {
+			$this->getPPOMData($id,$product_id);
+		}
+
 	}
+
+	/**
+	 * Code for PPOM export
+	 * @param $id
+	 * @param $product_id
+	 */
+	public function getPPOMData($order_id, $product_ids)
+	{
+
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'nm_personalized';
+
+		// Fetch all the PPOM field setups from the `wp_nm_personalized` table
+		$field_setups = $wpdb->get_results( "SELECT * FROM $table_name" );
+
+		if ( !empty( $field_setups ) ) {
+
+			foreach ( $field_setups as $setup ) {
+				$meta_data = json_decode( $setup->the_meta, true );  // Unserialize the field meta data
+
+
+				// Display the unserialized field data if available
+				if ( is_array( $meta_data ) ) {
+
+					foreach ( $meta_data as $key => $field ) {
+						$pro_meta_fields[$field['title']] = $field['data_name'];
+					}
+
+
+				} 
+			}
+
+		} 
+
+
+
+		// Get order items for the specified order ID
+		$order_items = wc_get_order( $order_id )->get_items();
+
+		foreach ( $order_items as $item_id => $item ) {
+			// Get the meta data for each order item
+			$item_meta = wc_get_order_item_meta( $item_id, '', false );
+
+			foreach ( $item_meta as $meta_key => $meta_value ) {
+
+				if ( array_key_exists($meta_key, $pro_meta_fields)) { // Change this condition based on your actual meta key format
+
+					self::$export_instance->data[$order_id][$meta_key] = $meta_value[0]; // Store each field key-value pair
+
+				}
+			}
+		}
+
+
 	}
 
 	/**
@@ -360,7 +420,7 @@ class WooCommerceExport extends ExportExtension{
 			$featured_image_url = wp_get_attachment_image_url($featured_image_id, 'full');
 			$product_attributes = $parent_product->get_attributes();
 			$attribute_name = $att_values = $is_visible = $is_variation = $position = $is_taxonomy = [];
-		
+
 			foreach ($product_attributes as $attribute_key => $attribute) {
 				$attribute_name[] = str_replace('pa_', '', $attribute['name']);
 				$taxonomy_name = $attribute['taxonomy'];
@@ -383,81 +443,81 @@ class WooCommerceExport extends ExportExtension{
 			$product_caption = isset($attachment_meta['image_meta']['caption']) ? $attachment_meta['image_meta']['caption'] : '';
 			$product_alt_text = get_post_meta($featured_image_id, '_wp_attachment_image_alt', true);
 			$product_description = get_post_field('post_content', $featured_image_id);
-		
+
 			$product_title = $parent_product->get_title();
-   			$is_featured = get_post_meta($parent_product->get_id(), 'featured', true) ? '1' : '0';
+			$is_featured = get_post_meta($parent_product->get_id(), 'featured', true) ? '1' : '0';
 			$downloadable = $variation->is_downloadable() ? 'yes' : 'no';
 			if ($variation->is_downloadable()) {
 				$download_limit = $variation->get_download_limit();
 				$download_expiry = $variation->get_download_expiry();
 				$downloadable_files = [];
 				$download_type = [];
-					$downloads = $variation->get_downloads(); 
-					foreach ($downloads as $download) {
-						$file_string = $download['name'].','.$download['file'];
-						$downloadable_files[] = $file_string;
-					}
+				$downloads = $variation->get_downloads(); 
+				foreach ($downloads as $download) {
+					$file_string = $download['name'].','.$download['file'];
+					$downloadable_files[] = $file_string;
+				}
 				$download_file_str = implode('|', $downloadable_files);
 				WooCommerceExport::$export_instance->data[$id]['downloadable_files'] = $download_file_str ?? '';	
 				WooCommerceExport::$export_instance->data[$id]['download_limit'] = $download_limit ?? '';
 				WooCommerceExport::$export_instance->data[$id]['download_expiry'] = $download_expiry ?? '';		
 			}
-				$price  = $variation->get_price();
-				$sale_price_dates_from = $variation->get_date_on_sale_from();
-				$sale_price_dates_to = $variation->get_date_on_sale_to();
-				$regular_price = $variation->get_regular_price();
-				$sale_price = $variation->get_sale_price();
-				$purchase_note = $variation->get_purchase_note();
-				$default_attributes = $variation->get_default_attributes();
-				$attribute_default = [];
-				foreach ($default_attributes as $def_attribute_key => $def_attribute_value) {
-					$attribute_default[] = str_replace('pa_', '', $def_attribute_key) . '|' . $def_attribute_value;
+			$price  = $variation->get_price();
+			$sale_price_dates_from = $variation->get_date_on_sale_from();
+			$sale_price_dates_to = $variation->get_date_on_sale_to();
+			$regular_price = $variation->get_regular_price();
+			$sale_price = $variation->get_sale_price();
+			$purchase_note = $variation->get_purchase_note();
+			$default_attributes = $variation->get_default_attributes();
+			$attribute_default = [];
+			foreach ($default_attributes as $def_attribute_key => $def_attribute_value) {
+				$attribute_default[] = str_replace('pa_', '', $def_attribute_key) . '|' . $def_attribute_value;
+			}
+			$custom_attributes = $variation->get_attributes();
+			$attribute_names = [];
+			foreach ($custom_attributes as $cus_attribute_key => $cus_attribute_value) {
+				if(strpos($cus_attribute_value,'-')!== false){
+					$cus_attribute_value = str_replace('-',' ',$cus_attribute_value);
 				}
-				$custom_attributes = $variation->get_attributes();
-				$attribute_names = [];
-				foreach ($custom_attributes as $cus_attribute_key => $cus_attribute_value) {
-					if(strpos($cus_attribute_value,'-')!== false){
-						$cus_attribute_value = str_replace('-',' ',$cus_attribute_value);
-					}
-					$attribute_names[] = str_replace('pa_', '', $cus_attribute_key) . '|' . $cus_attribute_value;
-				}
-				$tax_status = $variation->get_tax_status();
-				$tax_status_mapping = array('taxable' => 1 , 'shipping' => 2, 'none' => 3);
-				$is_virtual = $variation->is_virtual() ? 'yes' : 'no';
-				if(!$variation->is_virtual()){
+				$attribute_names[] = str_replace('pa_', '', $cus_attribute_key) . '|' . $cus_attribute_value;
+			}
+			$tax_status = $variation->get_tax_status();
+			$tax_status_mapping = array('taxable' => 1 , 'shipping' => 2, 'none' => 3);
+			$is_virtual = $variation->is_virtual() ? 'yes' : 'no';
+			if(!$variation->is_virtual()){
 				$weight = $variation->get_weight();
 				$length = $variation->get_length();
 				$width = $variation->get_width();
 				$height = $variation->get_height();	
-				}
-				$manages_stock = $variation->managing_stock() ? 'yes' : 'no';
-				$stock_status = $variation->get_stock_status();	
-				$sold_individually = $variation->get_sold_individually();
-				if($variation->managing_stock()){
-					$stock_qty = $variation->get_stock_quantity();
-					$low_stock_amount = $variation->get_low_stock_amount();
-					$backorders = $variation->get_backorders();
-					switch ($backorders) {
-						case 'no':
-							$backorders_no= '1';
-							break;
-					
-						case 'notify':
-							$backorders_no= '2';
-							break;
-					
-						case 'yes':
-							$backorders_no = '3';
-							break;
-					
-						default:
-							$backorders_no = '';
-							break;
-					}					
-				}
-				$var_description = $variation->get_description();
-				$var_class_id = $variation->get_shipping_class_id();
-				$shipping_class_term = get_term($var_class_id, 'product_shipping_class');
+			}
+			$manages_stock = $variation->managing_stock() ? 'yes' : 'no';
+			$stock_status = $variation->get_stock_status();	
+			$sold_individually = $variation->get_sold_individually();
+			if($variation->managing_stock()){
+				$stock_qty = $variation->get_stock_quantity();
+				$low_stock_amount = $variation->get_low_stock_amount();
+				$backorders = $variation->get_backorders();
+				switch ($backorders) {
+				case 'no':
+					$backorders_no= '1';
+					break;
+
+				case 'notify':
+					$backorders_no= '2';
+					break;
+
+				case 'yes':
+					$backorders_no = '3';
+					break;
+
+				default:
+					$backorders_no = '';
+					break;
+				}					
+			}
+			$var_description = $variation->get_description();
+			$var_class_id = $variation->get_shipping_class_id();
+			$shipping_class_term = get_term($var_class_id, 'product_shipping_class');
 		}
 		WooCommerceExport::$export_instance->data[$id]['PARENTSKU'] = $parent_sku ; 
 		WooCommerceExport::$export_instance->data[$id]['VARIATIONSKU'] = $variation_sku; 
@@ -541,13 +601,13 @@ class WooCommerceExport extends ExportExtension{
 			WooCommerceExport::$export_instance->data[$id]['product_attribute_variation'] = implode('|', $is_variation);
 			WooCommerceExport::$export_instance->data[$id]['product_attribute_position'] = implode('|', $position);
 			WooCommerceExport::$export_instance->data[$id]['product_attribute_taxonomy'] = implode('|', $is_taxonomy);
-		 }
+		}
 
 
 		$get_catalog_visibility = $product->get_catalog_visibility();
 		$visibility_mapping = array('visible' => '1','catalog' => '2','search'  => '3','hidden'  => '4');
 		WooCommerceExport::$export_instance->data[$id]['visibility'] = array_key_exists($get_catalog_visibility,$visibility_mapping) ? $visibility_mapping[$get_catalog_visibility] : '';
-		
+
 		$tax_status = $product->get_tax_status();
 		$tax_status_mapping = array('taxable' => 1 , 'shipping' => 2, 'none' => 3);
 		WooCommerceExport::$export_instance->data[$id]['tax_status'] = array_key_exists($tax_status,$tax_status_mapping) ? $tax_status_mapping[$tax_status] : '' ;
@@ -630,27 +690,27 @@ class WooCommerceExport extends ExportExtension{
 		}
 		$grouping_product_ids_string = implode(',', $grouping_product_ids);
 		WooCommerceExport::$export_instance->data[$id]['grouping_product'] = $grouping_product_ids_string;
-		
+
 		$sale_price_dates_from = $product->get_date_on_sale_from();
 		$sale_price_dates_to = $product->get_date_on_sale_to();
 		$sold_individually = $product->get_sold_individually();
 		$backorders = $product->get_backorders();
 		switch ($backorders) {
-			case 'no':
-				$backorders_no= '1';
-				break;
-		
-			case 'notify':
-				$backorders_no= '2';
-				break;
-		
-			case 'yes':
-				$backorders_no = '3';
-				break;
-		
-			default:
-				$backorders_no = '';
-				break;
+		case 'no':
+			$backorders_no= '1';
+			break;
+
+		case 'notify':
+			$backorders_no= '2';
+			break;
+
+		case 'yes':
+			$backorders_no = '3';
+			break;
+
+		default:
+			$backorders_no = '';
+			break;
 		}	
 		// WooCommerceExport::$export_instance->data[$id]['grouping_product'] = implode(',',$grouping_products);
 		WooCommerceExport::$export_instance->data[$id]['sale_price_dates_from'] = $sale_price_dates_from ?? '';
@@ -711,7 +771,7 @@ class WooCommerceExport extends ExportExtension{
 			}
 			$download_type_str = !empty($download_type) ? implode('|', $download_type) : '';
 			$download_file_str = !empty($downloadable_files) ? implode('|', $downloadable_files) : '';
-				
+
 			$download_limit = $product->get_download_limit();
 			$download_expiry = $product->get_download_expiry();
 		}
@@ -736,7 +796,7 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['_subscription_trial_length'] = $subscription_trial_length ?? '';
 		WooCommerceExport::$export_instance->data[$id]['_subscription_price'] = $subscription_price ?? '';
 		WooCommerceExport::$export_instance->data[$id]['_subscription_sign_up_fee'] = $subscription_sign_up_fee ?? '';	
-        // Retrieve barcode details
+		// Retrieve barcode details
 		if(is_plugin_active('yith-woocommerce-barcodes-premium/init.php' )){
 			$barcode_protocol = get_post_meta($id, '_ywbc_barcode_protocol', true);
 			$barcode_value = get_post_meta($id, '_ywbc_barcode_value', true);
@@ -752,7 +812,7 @@ class WooCommerceExport extends ExportExtension{
 		if (is_plugin_active('woocommerce-product-bundles/woocommerce-product-bundles.php')) {
 			// Get the bundle product
 			$bundle_product = wc_get_product($id);
-		
+
 			if ($bundle_product && $bundle_product->is_type('bundle')) {
 				// Initialize default values
 				$bundle_items = array();
@@ -772,7 +832,7 @@ class WooCommerceExport extends ExportExtension{
 				$description_values = array();
 				$override_title_values = array();
 				$override_description_values = array();
-		
+
 				// Get bundle settings
 				$min_bundle_size = $bundle_product->get_min_bundle_size();
 				$max_bundle_size = $bundle_product->get_max_bundle_size();
@@ -790,7 +850,7 @@ class WooCommerceExport extends ExportExtension{
 					// Get bundled item product
 					$bundled_product = $bundled_item->get_product();
 					$bundle_items[] = $bundled_product->get_name();
-		
+
 					// Retrieve settings for each bundled item
 					$optional_values[] = method_exists($bundled_item, 'is_optional') && $bundled_item->is_optional() ? 'Yes' : 'No';
 					$quantity_min[] = method_exists($bundled_item, 'get_min_quantity') ? $bundled_item->get_min_quantity() : '';
@@ -809,7 +869,7 @@ class WooCommerceExport extends ExportExtension{
 					$override_title_values[] = method_exists($bundled_item, 'get_override_title_value') ? $bundled_item->get_override_title_value() : '';
 					$override_description_values[] = method_exists($bundled_item, 'get_override_description_value') ? $bundled_item->get_override_description_value() : '';
 				}
-		
+
 				// Prepare export data
 				WooCommerceExport::$export_instance->data[$id]['product_bundle_items'] = implode('|', $bundle_items) ?? '';
 				WooCommerceExport::$export_instance->data[$id]['optional'] = implode('|', $optional_values) ?? '';
@@ -837,7 +897,7 @@ class WooCommerceExport extends ExportExtension{
 				WooCommerceExport::$export_instance->data[$id]['item_grouping'] = $item_grouping ?? '';
 			}
 		}	
-		
+
 	}
 
 	/**
@@ -1390,24 +1450,24 @@ class WooCommerceExport extends ExportExtension{
 			}
 			$lesson_files_pack_output .= 'lesson_files_label:' . $lesson_files_pack_item['lesson_files_label'] . ',';
 			$lesson_files_pack_output = rtrim($lesson_files_pack_output, ',');		}
-	
+
 			WooCommerceExport::$export_instance->data[$id]['type'] = $type;
-			WooCommerceExport::$export_instance->data[$id]['duration'] = $duration;
-			WooCommerceExport::$export_instance->data[$id]['preview'] = $preview;
-			WooCommerceExport::$export_instance->data[$id]['lesson_excerpt'] = $lesson_excerpt;
-			WooCommerceExport::$export_instance->data[$id]['_thumbnail_id'] = $_thumbnail_id;
-			WooCommerceExport::$export_instance->data[$id]['video_type'] = $video_type;
-			WooCommerceExport::$export_instance->data[$id]['lesson_youtube_url'] = $lesson_youtube_url;
-			WooCommerceExport::$export_instance->data[$id]['presto_player_idx'] = $presto_player_idx;
-			WooCommerceExport::$export_instance->data[$id]['lesson_video'] = $lesson_video;
-			WooCommerceExport::$export_instance->data[$id]['lesson_video_poster'] = $lesson_video_poster;
-			WooCommerceExport::$export_instance->data[$id]['lesson_video_width'] = $lesson_video_width;
-			WooCommerceExport::$export_instance->data[$id]['lesson_shortcode'] = $lesson_shortcode;
-			WooCommerceExport::$export_instance->data[$id]['lesson_embed_ctx'] = $lesson_embed_ctx;
-			WooCommerceExport::$export_instance->data[$id]['lesson_stream_url'] = $lesson_stream_url;
-			WooCommerceExport::$export_instance->data[$id]['lesson_vimeo_url'] = $lesson_vimeo_url;
-			WooCommerceExport::$export_instance->data[$id]['lesson_ext_link_url'] = $lesson_ext_link_url;
-			WooCommerceExport::$export_instance->data[$id]['lesson_files_pack'] = $lesson_files_pack_output;
+		WooCommerceExport::$export_instance->data[$id]['duration'] = $duration;
+		WooCommerceExport::$export_instance->data[$id]['preview'] = $preview;
+		WooCommerceExport::$export_instance->data[$id]['lesson_excerpt'] = $lesson_excerpt;
+		WooCommerceExport::$export_instance->data[$id]['_thumbnail_id'] = $_thumbnail_id;
+		WooCommerceExport::$export_instance->data[$id]['video_type'] = $video_type;
+		WooCommerceExport::$export_instance->data[$id]['lesson_youtube_url'] = $lesson_youtube_url;
+		WooCommerceExport::$export_instance->data[$id]['presto_player_idx'] = $presto_player_idx;
+		WooCommerceExport::$export_instance->data[$id]['lesson_video'] = $lesson_video;
+		WooCommerceExport::$export_instance->data[$id]['lesson_video_poster'] = $lesson_video_poster;
+		WooCommerceExport::$export_instance->data[$id]['lesson_video_width'] = $lesson_video_width;
+		WooCommerceExport::$export_instance->data[$id]['lesson_shortcode'] = $lesson_shortcode;
+		WooCommerceExport::$export_instance->data[$id]['lesson_embed_ctx'] = $lesson_embed_ctx;
+		WooCommerceExport::$export_instance->data[$id]['lesson_stream_url'] = $lesson_stream_url;
+		WooCommerceExport::$export_instance->data[$id]['lesson_vimeo_url'] = $lesson_vimeo_url;
+		WooCommerceExport::$export_instance->data[$id]['lesson_ext_link_url'] = $lesson_ext_link_url;
+		WooCommerceExport::$export_instance->data[$id]['lesson_files_pack'] = $lesson_files_pack_output;
 	}
 
 
