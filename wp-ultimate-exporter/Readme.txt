@@ -5,8 +5,8 @@ Tags: export, export woocommerce, export wordpress, product export, wordpress cs
 Requires at least: 5.0
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 2.8
-Version: 2.8
+Stable tag: 2.8.1
+Version: 2.8.1
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -392,6 +392,13 @@ In the case of WooCommerce customers below listed user meta is exported:
 
 == Changelog ==
 
+= 2.8.1 =
+
+Release date: 2024-11-06
+
+* Added: export support for ranmath dataset schema type along with related fields
+
+
 = 2.8 =
 
 Release date: 2024-10-21
@@ -771,6 +778,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+
+= 2.8.1 =
+
+* Try New Export feature added for RankMath Dataset Schema.
 
 = 2.8 =
 

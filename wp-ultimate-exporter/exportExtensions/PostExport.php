@@ -759,6 +759,50 @@ class PostExport extends ExportExtension{
 					self::$export_instance->data[$id]['destination_url'] = $url_to;
 					self::$export_instance->data[$id]['redirection_type'] = $header_code;
 				}
+				if($value->meta_key == 'rank_math_schema_Dataset'){
+  		       
+					$schema_data = get_post_meta($id, 'rank_math_schema_Dataset',true);
+					self::$export_instance->data[$id]['ds_name'] = $schema_data['name'];
+					self::$export_instance->data[$id]['ds_description'] = $schema_data['description'];
+					self::$export_instance->data[$id]['ds_url'] = $schema_data['url'];
+					self::$export_instance->data[$id]['ds_sameAs'] = $schema_data['sameAs'];
+					self::$export_instance->data[$id]['ds_license'] = $schema_data['license'];
+					self::$export_instance->data[$id]['ds_temp_coverage'] = $schema_data['temporalCoverage'];
+					self::$export_instance->data[$id]['ds_spatial_coverage'] = $schema_data['spatialCoverage'];
+					$distribution = $schema_data['distribution'];
+					$identifier = $schema_data['identifier'];
+					$keywords = $schema_data['keywords'];
+					if(is_array($distribution)){
+						$encodeFormat = '';
+						$contenUrl = '';
+						foreach ($distribution as $disKey  => $disVal) {
+							$encodeFormat.= $disVal['encodingFormat'].',';
+							$contentUrl.= $disVal['contentUrl'].',';
+							self::$export_instance->data[$id]['encodingFormat'] = rtrim($encodeFormat,',');
+							self::$export_instance->data[$id]['contentUrl'] = rtrim($contentUrl,',');
+						}
+					
+					}
+
+					if(is_array($identifier)){
+						$ident = '';
+						foreach ($identifier as $identKey  => $identVal) {
+							$ident.= $identVal.',';
+					
+							self::$export_instance->data[$id]['ds_identifier'] = rtrim($ident,',');
+					
+						}
+					}
+
+					if(is_array($keywords)){
+						$keyword = '';
+						foreach ($keywords as $kwKey  => $keyVal) {
+							$keyword.= $keyVal.',';
+							self::$export_instance->data[$id]['ds_keywords'] = rtrim($keyword,',');	
+						}
+					}
+						
+   				} 					
 				if($value->meta_key == 'rank_math_advanced_robots'){
 					$rank_robots_value=$value->meta_value;
 					$rank_robots=unserialize($rank_robots_value);
