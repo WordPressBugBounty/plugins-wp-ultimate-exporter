@@ -658,10 +658,20 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					{
 						foreach ($userMeta as $userMetaInfo)
 						{
-							if ($userMetaInfo->meta_key == 'wp_capabilities')
+							if ($userMetaInfo->meta_key == $wpdb->prefix.'capabilities')
 							{
-								$userRole = $this->getUserRole($userMetaInfo->meta_value);
-								$this->data[$userId]['role'] = $userRole;
+								
+								if(is_plugin_active('members/members.php')){
+									$data = unserialize($userMetaInfo->meta_value);
+									$roles = array_keys(array_filter($data));
+									$role = implode('|', $roles);
+									$this->data[ $userId ][ 'multi_user_role' ] = $role;
+								}
+								else{
+									$userRole = $this->getUserRole($userMetaInfo->meta_value);
+									$this->data[ $userId ][ 'role' ] = $userRole;
+								}
+
 							}
 							elseif ($userMetaInfo->meta_key == 'description')
 							{

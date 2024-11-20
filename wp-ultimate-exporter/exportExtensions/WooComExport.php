@@ -320,6 +320,16 @@ class WooCommerceExport extends ExportExtension{
 			$this->getPPOMData($id,$product_id);
 		}
 
+		if ( is_plugin_active( 'yith-woocommerce-order-tracking-premium/init.php' ) ) {
+			self::$export_instance->data[$id]['ywot_tracking_code'] = 	$order->get_meta('ywot_tracking_code', true);
+			self::$export_instance->data[$id]['ywot_tracking_postcode'] = $order->get_meta('ywot_tracking_postcode', true);
+			self::$export_instance->data[$id]['ywot_carrier_id'] = $order->get_meta('ywot_carrier_id', true);
+			self::$export_instance->data[$id]['ywot_pick_up_date'] =  $order->get_meta('ywot_pick_up_date', true);
+			self::$export_instance->data[$id]['ywot_estimated_delivery_date'] =  $order->get_meta('ywot_estimated_delivery_date', true);
+			self::$export_instance->data[$id]['ywot_picked_up'] =  $order->get_meta('ywot_picked_up', true);	
+		}
+	
+
 	}
 
 	/**

@@ -3,10 +3,10 @@ Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, export woocommerce, export wordpress, product export, wordpress csv export, wordpress xml export, migrate, export csv from wordpress, export xml from wordpress, export custom post type, export woocommerce products, export woocommerce orders, migrate woocommerce, csv export, xml export, csv exporter, datafeed, export woocommerce coupons
 Requires at least: 5.0
-Tested up to: 6.5
+Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.8.1
-Version: 2.8.1
+Stable tag: 2.8.2
+Version: 2.8.2
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -391,6 +391,14 @@ In the case of WooCommerce customers below listed user meta is exported:
 * Select 'Comments' module in the export tab to export comments. Provide filename, filetype, choose filters, and click export.
 
 == Changelog ==
+
+= 2.8.2 =
+
+Release date: 2024-11-20
+
+* Added: Export users with WP-Members and MemberPress data.
+* Added: Export WooCommerce order tracking details with the integration for the YITH Order Tracking plugin.
+* Checked: Compatibility for WordPress 6.7
 
 = 2.8.1 =
 
@@ -778,6 +786,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+
+= 2.8.2 =
+
+* Try New Export feature added for Memberpress roles & YITH Order Tracking Information
 
 = 2.8.1 =
 
