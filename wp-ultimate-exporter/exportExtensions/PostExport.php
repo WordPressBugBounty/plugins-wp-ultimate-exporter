@@ -812,6 +812,22 @@ class PostExport extends ExportExtension{
 					$rank_math_advanced_robots=$max_snippet.','.$max_video_preview.','.$max_image_preview;
 					self::$export_instance->data[$id]['rank_math_advanced_robots'] = $rank_math_advanced_robots;
 				}
+				if(is_plugin_active('advanced-classifieds-and-directory-pro/acadp.php')) {
+					$listingFields = array('price','views','views','zipcode','phone','email','website','images','video','latitude','longitude','location');
+				
+				
+					if(isset($value->meta_key) && in_array($value->meta_key,$listingFields)){
+						
+						if(is_serialized($value->meta_value)){
+							$value->meta_value = unserialize($value->meta_value);
+						}
+										
+						self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value ;
+				
+					}
+		
+				
+				}	
 				if((isset($value->meta_key) && is_array($jetFName))){
 					if(in_array($value->meta_key,$jetFName)){
 						$getMetaFields = $wpdb->get_results( $wpdb->prepare("SELECT option_value FROM {$wpdb->prefix}options WHERE option_name=%s",'jet_engine_meta_boxes'),ARRAY_A);

@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate Exporter
- * Version:     2.8.2
+ * Version:     2.9
  * Plugin URI:  https://www.smackcoders.com/ultimate-exporter.html
  * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, eCommerce, Custom Post and Custom field information along with default WordPress modules.
  * Author:      Smackcoders

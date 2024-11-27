@@ -988,6 +988,11 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 							$this->getPolylangData($postId, $this->optionalType, $exp_module);
 						}
 					}
+					if($exp_module == 'CustomPosts'){
+						if(is_plugin_active('geodirectory/geodirectory.php')){
+							$this->getGeoPlaceData($postId,$this->optionalType,$exp_module);
+						}
+					}	
 					ExportExtension::$post_export->getPostsMetaDataBasedOnRecordId($postId, $this->module, $this->optionalType);
 					$this->getTermsAndTaxonomies($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WooCommerce') ExportExtension::$woocom_export->getProductData($postId, $this->module, $this->optionalType);
@@ -1679,6 +1684,16 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					}
 				}
 			}
+		}
+
+		public function getGeoPlaceData ($id,$optional_type,$exp_module) {
+
+			$post_info = geodir_get_post_info($id);
+			foreach ($post_info as $gdKey => $gdVal){				
+				if(!empty($gdVal)){
+					$this->data[$id][ $gdKey ] = $gdVal ;
+				}
+			} 											
 		}
 
 		/**

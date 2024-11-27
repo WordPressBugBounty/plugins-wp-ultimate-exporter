@@ -5,8 +5,8 @@ Tags: export, export woocommerce, export wordpress, product export, wordpress cs
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.8.2
-Version: 2.8.2
+Stable tag: 2.9
+Version: 2.9
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -35,8 +35,8 @@ The plugin stands out as a powerhouse export tool for WordPress. It empowers you
 - **Post Status Filtering:** Filter and export data based on post statuses like published, draft, or pending review.
 - **Author-Specific Content:** Extract content created by a specific author.
 
-### 🔥 What's New in Version 2.7.1
-- In this update, we’ve expanded JetEngine plugin compatibility to allow exporting fields data from Custom Content Types (CCT). Download the latest version and try it out – we’d love to hear your feedback!
+### 🔥 What's New in Version 2.9
+We’re excited to announce that this Version 2.9 introduces compatibility with popular directory plugins, making data management even more efficient. You can now export listings from the **Business Directory Plugin**, ensuring better organization and accessibility of directory data. Additionally, we’ve added export support for **Advanced Classifieds & Directory Pro**, allowing smooth handling of classified listings. For location-based directories, **GeoDirectory** users can now export Places data. Update now to explore these powerful new features, and let us know how they work for you!
 
 = Multilingual Export: Introducing WPML & Polylang Export =
 
@@ -391,6 +391,14 @@ In the case of WooCommerce customers below listed user meta is exported:
 * Select 'Comments' module in the export tab to export comments. Provide filename, filetype, choose filters, and click export.
 
 == Changelog ==
+
+= 2.9 =
+
+Release date: 2024-11-27
+
+* New Feature: Added export support for listings in Business Directory Plugin.
+* New Feature: Enabled export of listings in Advanced Classifieds & Directory Pro.
+* New Feature: Added export support for Places in GeoDirectory.
 
 = 2.8.2 =
 
@@ -786,6 +794,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+
+= 2.9 =
+
+* Upgrade now to try the latest export compatibility added for three leading directory plugins: Business Directory Plugin, Advanced Classifieds & Directory Pro, and GeoDirectory.
 
 = 2.8.2 =
 
