@@ -89,9 +89,21 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 		}
 
 		public function downloadFunction(){
+
 			check_ajax_referer('smack-ultimate-csv-importer', 'securekey');            
-			$file_name = $_POST['fileName'];
-			$file_path = $_POST['filePath'];
+			
+			//Vulnerability fix - Arbitrary file download
+
+			$file_name = sanitize_file_name($_POST['fileName'] ?? '');
+			$file_path = $_POST['filePath'] ?? '';		
+			$allowed_directory = wp_upload_dir()['basedir'] . '/smack_uci_uploads/exports/'; // Example allowed directory
+			$real_file_path = realpath($file_path);
+			$real_allowed_directory = realpath($allowed_directory);	
+		
+			if (strpos($real_file_path, $real_allowed_directory) !== 0) {
+				wp_die('Invalid file path or file not found.', 'Error', ['response' => 400]);
+			}
+						
 			header('Content-Description: File Transfer');
 			header('Content-Type: application/octet-stream');
 			header('Content-Disposition: attachment; filename="' . $file_name . '"');
@@ -99,11 +111,12 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			header('Expires: 0');
 			header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
 			header('Pragma: public');
-			header('Content-Length: ' . filesize($file_path));
+			header('Content-Length: ' . filesize($real_file_path));
 			ob_clean();
 			flush();
-			readfile($file_path);
+			readfile($real_file_path);
 			wp_die();           
+			
 		}
 
 		public function totalRecords()
