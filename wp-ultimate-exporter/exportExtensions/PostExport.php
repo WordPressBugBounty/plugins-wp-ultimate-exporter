@@ -44,6 +44,20 @@ class PostExport extends ExportExtension{
 	 */
 	public function getRecordsBasedOnPostTypes ($module, $optionalType, $conditions ,$offset , $limit ,$headers = '') {
 		global $wpdb,$sitepress;
+		if($module == 'JetBooking'){
+			if(!empty($conditions['specific_jetbooking_status']['is_check']) && $conditions['specific_jetbooking_status']['is_check'] == 'true' && !empty($conditions['specific_jetbooking_status']['status']) ) {
+				$jet_booking_status = $conditions['specific_jetbooking_status']['status'];
+				$bookings = jet_abaf_get_bookings( ['status' => $jet_booking_status,'return' => 'arrays']);
+				$post_ids = wp_list_pluck($bookings, 'ID');
+				self::$export_instance->totalRowCount = count($post_ids);
+				return $post_ids;
+			}else{
+				$bookings = jet_abaf_get_bookings( [ 'return' => 'arrays' ] );
+				$post_ids = wp_list_pluck($bookings, 'ID');
+				self::$export_instance->totalRowCount = count($post_ids);
+				return $post_ids;
+			}			
+		}
 		if($module == 'CustomPosts' && $optionalType == 'nav_menu_item'){
 			$get_menu_id = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}terms AS t LEFT JOIN {$wpdb->prefix}term_taxonomy AS tt ON tt.term_id = t.term_id WHERE tt.taxonomy = 'nav_menu' ", ARRAY_A);
 			$get_menu_arr = array_column($get_menu_id, 'term_id');
@@ -483,6 +497,24 @@ class PostExport extends ExportExtension{
 		self::$export_instance->typeOftypesField = $typeOftypesField;
 
 		$result = $wpdb->get_results($query);
+
+		if (is_plugin_active('jet-booking/jet-booking.php')) {
+			$manage_units = jet_abaf()->db->get_apartment_units( $id );
+			if(!empty($manage_units)) {
+
+				$titleCounts = [];
+				foreach ($manage_units as $unit) {
+					// Remove any trailing space followed by numbers (e.g., " 1", " 2", " 3") at the end of unit_title
+					$baseTitle = preg_replace('/\s+\d+$/', '', $unit['unit_title']);
+					if (!isset($titleCounts[$baseTitle])) {
+						$titleCounts[$baseTitle] = 0;
+					}
+					$titleCounts[$baseTitle]++;
+				}
+				self::$export_instance->data[$id]['unit_title'] = implode('|', array_keys($titleCounts));
+				self::$export_instance->data[$id]['unit_number'] = implode('|', array_values($titleCounts));
+			}
+		}
 
 		// jeteng fields
 		if(is_plugin_active('jet-engine/jet-engine.php')){
@@ -1096,7 +1128,21 @@ class PostExport extends ExportExtension{
 				self::$export_instance->data[$id]['featured_image_description'] = isset($description)? $description : '' ;
 				self::$export_instance->data[$id]['featured_file_name'] = isset($file_name)? $file_name : '' ;
 			}
-		}else if($value !== null && $value->meta_key == '_downloadable_files'){ 
+		}
+		else if(is_plugin_active('jet-booking/jet-booking.php')){
+
+			if(isset($value->meta_key) && $value->meta_key == 'jet_abaf_price'){
+				self::$export_instance->data[$id]['jet_abaf_price'] = $value->meta_value;
+			}
+			else if(isset($value->meta_key) && $value->meta_key == 'jet_abaf_configuration'){
+				self::$export_instance->data[$id]['jet_abaf_configuration'] = $value->meta_value ;
+			}
+			else if(isset($value->meta_key) && $value->meta_key == 'jet_abaf_custom_schedule'){
+				self::$export_instance->data[$id]['jet_abaf_custom_schedule'] =$value->meta_value;
+			}
+		}
+		else if(isset($value->meta_key) && $value->meta_key == '_downloadable_files'){ 
+
 			$downfiles = unserialize($value->meta_value); 
 			if(!empty($downfiles)){
 				foreach($downfiles as $dk => $dv){

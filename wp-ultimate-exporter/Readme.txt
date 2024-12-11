@@ -5,8 +5,8 @@ Tags: export, export woocommerce, export wordpress, product export, wordpress cs
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.9.1
-Version: 2.9.1
+Stable tag: 2.9.2
+Version: 2.9.2
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -391,6 +391,13 @@ In the case of WooCommerce customers below listed user meta is exported:
 
 == Changelog ==
 
+= 2.9.2 =
+
+* Added: Enhanced export functionality to include posts, products, orders, refunds, and users.
+* Added: support for exporting WooCommerce EAN/GTIN fields.
+* Added: export for Jet Bookings data.
+* Fixed: Security issue related to Remote Code Execution.
+
 = 2.9.1 =
 
 * Fixed: Security issue related to Arbitrary File Download Vulnerability.
@@ -771,6 +778,11 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+
+= 2.9.2 =
+
+Upgrade now to get added features.
+
 
 = 2.9.1 =
 
