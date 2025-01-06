@@ -59,6 +59,9 @@ class ExportHandler extends ExportExtension{
 		}						
 		if (is_plugin_active('jet-booking/jet-booking.php')) {
 			$response['jetbooking_active'] = true;
+		}	
+		if (is_plugin_active('jet-reviews/jet-reviews.php')) {
+			$response['jetreviews_active'] = true;
 		}		
 		echo wp_json_encode($response);
 		wp_die();

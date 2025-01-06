@@ -374,6 +374,43 @@ class PostExport extends ExportExtension{
 				$result = $wpdb->get_col($query_with_offset_limit);
 			}
 		}
+		if ($module == 'JetReviews') {
+			// Check if specific review conditions are provided
+			if (!empty($conditions['specific_review_status']['approved'])) {
+				$approved = $conditions['specific_review_status']['approved'];
+				$reviews = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT * FROM {$wpdb->prefix}jet_reviews WHERE approved = %d ORDER BY date DESC LIMIT %d OFFSET %d",
+						$approved, 
+						$limit, 
+						$offset
+					),
+					ARRAY_A
+				);
+	
+				// Collect review IDs
+				foreach ($reviews as $review) {
+					$result[] = $review['id']; // Assuming 'id' is the primary key for reviews
+				}
+				
+				self::$export_instance->totalRowCount = !empty($result) ? count($result) : 0;
+				return !empty($result) ? array_slice($result, $offset, $limit) : [];
+			} else {
+				// Fetch all reviews if no specific conditions are set
+				$reviews = $wpdb->get_results(
+					"SELECT * FROM {$wpdb->prefix}jet_reviews ORDER BY date DESC LIMIT {$limit} OFFSET {$offset}",
+					ARRAY_A
+				);
+	
+				foreach ($reviews as $review) {
+					$result[] = $review['id'];
+				}
+				
+				self::$export_instance->totalRowCount = !empty($result) ? count($result) : 0;
+				return !empty($result) ? array_slice($result, $offset, $limit) : [];
+			}
+		}
+
 		if(is_plugin_active('jet-engine/jet-engine.php')){
 			$get_slug_name = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}jet_post_types WHERE status = 'content-type'");
 			foreach($get_slug_name as $key=>$get_slug){

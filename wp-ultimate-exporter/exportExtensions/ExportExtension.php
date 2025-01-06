@@ -42,7 +42,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 		public $export_mode;
 		public $export_log = array();
 		public $limit;
-		protected static $instance = null, $mapping_instance, $metabox_export, $jet_book_export, $jetengine_export, $export_handler, $post_export, $woocom_export, $review_export, $ecom_export, $learnpress_export;
+		protected static $instance = null, $mapping_instance, $metabox_export, $jet_reviews_export, $jet_book_export, $jetengine_export, $export_handler, $post_export, $woocom_export, $review_export, $ecom_export, $learnpress_export;
 		protected $plugin, $activateCrm, $crmFunctionInstance;
 		public $plugisnScreenHookSuffix = null;
 
@@ -58,6 +58,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				ExportExtension::$learnpress_export = LearnPressExport::getInstance();
 				ExportExtension::$jetengine_export = JetEngineExport::getInstance();
 				ExportExtension::$jet_book_export = JetBookingExport::getInstance();
+				ExportExtension::$jet_reviews_export = JetReviewsExport::getInstance();
 				ExportExtension::$metabox_export = metabox::getInstance();
 				self::$instance->doHooks();
 			}
@@ -199,6 +200,26 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				echo wp_json_encode($total);
 				wp_die();
 			}
+			
+			elseif ($module == 'JetReviews') {
+				global $wpdb;
+			
+				// Verify if the JetReviews plugin is active
+				if (!is_plugin_active('jet-reviews/jet-reviews.php')) {
+					echo wp_json_encode(0);
+					wp_die();
+				}
+			
+				// Query to count approved reviews
+				$query = "SELECT COUNT(*) FROM {$wpdb->prefix}jet_reviews";
+				$count = $wpdb->get_var($query);
+			
+				// Ensure count is an integer and return the result
+				$count = ($count !== null) ? intval($count) : 0;
+				echo wp_json_encode($count);
+				wp_die();
+			}
+			
 			if(is_plugin_active('jet-engine/jet-engine.php')){
 				$get_slug_name = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}jet_post_types WHERE status = 'content-type'");
 				foreach($get_slug_name as $key=>$get_slug){
@@ -523,6 +544,9 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			{
 				$optionalType = 'wpsc-product';
 			}
+			elseif($module == 'JetReviews'){
+				$optionalType = 'JetReviews';
+			}
 			elseif ($module == 'WPeCommerce' || $module == 'WPeCommerceCoupons')
 			{
 				$optionalType = 'wpsc-product';
@@ -587,6 +611,10 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				case 'JetBooking':
 					$result = self::FetchDataByPostTypes();
 					break;
+					case 'JetReviews':
+						$result = self::FetchDataByPostTypes($mod,$cat, $is_filter);
+						break;
+		
 			case 'Tags':
 				ExportExtension::$post_export->FetchTags($this->mode, $this->module, $this->optionalType);
 			case 'Taxonomies':
@@ -1014,7 +1042,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				foreach ($recordsToBeExport as $postId)
 				{
 					$exp_module = $this->module;
-					if($exp_module !== 'JetBooking'){
+					if($exp_module !== 'JetBooking' && $exp_module !== 'JetReviews') {
 						$this->data[$postId] = $this->getPostsDataBasedOnRecordId($postId,$this->module);	
 					}				
 					$this->data[$postId] = $this->getPostsDataBasedOnRecordId($postId,$this->module);
@@ -1038,6 +1066,9 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					$this->getTermsAndTaxonomies($postId, $this->module, $this->optionalType);
 					if($this->module == 'JetBooking')
 					ExportExtension::$jet_book_export->getJetBookingData($postId, $this->module, $this->optionalType);
+					if ($this->module == 'JetReviews') {
+					ExportExtension::$jet_reviews_export->getJetReviewsData($postId, $this->module, $this->optionalType);
+					}
 					if ($this->module == 'WooCommerce') ExportExtension::$woocom_export->getProductData($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WooCommerceRefunds') ExportExtension::$woocom_export->getWooComCustomerUser($postId, $this->module, $this->optionalType);
 					if ($this->module == 'WooCommerceOrders') ExportExtension::$woocom_export->getWooComOrderData($postId, $this->module, $this->optionalType);
@@ -3133,7 +3164,9 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 				public function returnMetaValueAsCustomerInput($meta_value, $header = false)
 				{
-
+					if ($header == 'rating_data') {
+						return $meta_value; 
+					}	
 					if ($header != 'jet_abaf_price'  && $header != 'jet_abaf_custom_schedule'  && $header != 'jet_abaf_configuration'  && $header != '_elementor_css'  && $header != '_elementor_controls_usage'  && $header != 'elementor_library_category'  && $header != '_elementor_page_assets'  && $header != '_elementor_page_settings'  &&  $header != '_elementor_data'){
 
 						if (is_array($meta_value))

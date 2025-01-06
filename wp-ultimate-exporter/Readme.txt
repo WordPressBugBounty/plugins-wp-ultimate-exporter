@@ -5,8 +5,8 @@ Tags: export, export woocommerce, export wordpress, product export, wordpress cs
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.9.2
-Version: 2.9.2
+Stable tag: 2.9.3
+Version: 2.9.3
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -390,6 +390,10 @@ In the case of WooCommerce customers below listed user meta is exported:
 * Select 'Comments' module in the export tab to export comments. Provide filename, filetype, choose filters, and click export.
 
 == Changelog ==
+
+= 2.9.3 =
+
+* Added: Support for exporting Jet Reviews.
 
 = 2.9.2 =
 
@@ -778,6 +782,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 * Initial release version. Tested and found to work well without any issues.
 
 == Upgrade Notice ==
+
+= 2.9.3 =
+
+Upgrade now to try latest export compatibility added for jet reviews.
 
 = 2.9.2 =
 

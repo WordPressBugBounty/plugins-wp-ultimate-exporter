@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate Exporter
- * Version:     2.9.2
+ * Version:     2.9.3
  * Plugin URI:  https://www.smackcoders.com/ultimate-exporter.html
  * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, eCommerce, Custom Post and Custom field information along with default WordPress modules.
  * Author:      Smackcoders
@@ -38,12 +38,14 @@ namespace Smackcoders\SMEXP;
 if ( ! defined( 'ABSPATH' ) )
 	exit; // Exit if accessed directly
 
-define('IMPORTER_VERSION', '7.13.1');
-define('EXPORTER_VERSION', '2.9.2');
+define('IMPORTER_VERSION', '7.13.3');
+define('EXPORTER_VERSION', '2.9.3');
 require_once('Plugin.php');
 require_once('SmackExporterInstall.php');
 require_once('exportExtensions/ExportExtension.php');
 require_once('exportExtensions/JetBookingExport.php');
+require_once('exportExtensions/JetReviewsExport.php');
+
 	
 if ( ! function_exists( 'is_plugin_active' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
