@@ -95,10 +95,16 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			check_ajax_referer('smack-ultimate-csv-importer', 'securekey');            
 			
 			//Vulnerability fix - Arbitrary file download
+			if (!is_user_logged_in() || !current_user_can('administrator')) {
+				wp_die('You do not have sufficient permissions to access this file.');
+			}
 
 			$file_name = sanitize_file_name($_POST['fileName'] ?? '');
-			$file_path = $_POST['filePath'] ?? '';		
-			$allowed_directory = wp_upload_dir()['basedir'] . '/smack_uci_uploads/exports/'; // Example allowed directory
+			$file_path = $_POST['filePath'] ?? '';	
+			$random_folder = wp_generate_password(16, false); // 16-character random folder name
+   	
+			$allowed_directory = wp_upload_dir()['basedir'] . '/smack_uci_uploads/exports/'.$random_folder. '/'; // Example allowed directory
+			
 			$real_file_path = realpath($file_path);
 			$real_allowed_directory = realpath($allowed_directory);	
 		
@@ -1780,12 +1786,24 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			if (is_user_logged_in() && current_user_can('administrator'))
 			{
 				$upload_dir = ABSPATH . 'wp-content/uploads/smack_uci_uploads/exports/';
+
+				$index_php_file = $upload_dir . 'index.php';
+				
+				if (!file_exists($index_php_file)) {
+					$file_content = '<?php' . PHP_EOL . '?>';
+					file_put_contents($index_php_file, $file_content);
+				}
+
+
+				$random_folder = wp_generate_password(16, false); // 16-character random folder name
+                $upload_dir = $upload_dir  . '/' . $random_folder . '/';
+				
 				if (!is_dir($upload_dir))
 				{
 					wp_mkdir_p($upload_dir);
 				}
 				$base_dir = wp_upload_dir();
-				$upload_url = $base_dir['baseurl'] . '/smack_uci_uploads/exports/';
+				$upload_url = $base_dir['baseurl'] . '/smack_uci_uploads/exports/'.$random_folder . '/';
 				chmod($upload_dir, 0777);
 			}
 

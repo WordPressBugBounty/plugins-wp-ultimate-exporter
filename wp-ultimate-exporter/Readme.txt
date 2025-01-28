@@ -5,8 +5,8 @@ Tags: export, export woocommerce, export wordpress, product export, wordpress cs
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.9.3
-Version: 2.9.3
+Stable tag: 2.10
+Version: 2.10
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -391,9 +391,9 @@ In the case of WooCommerce customers below listed user meta is exported:
 
 == Changelog ==
 
-= 2.9.3 =
+= 2.10 =
 
-* Added: Support for exporting Jet Reviews.
+* Added: Export support for WooCommerce orders, including personalized product information generated from Extra Product Options for WooCommerce fields.
 
 = 2.9.2 =
 
@@ -783,9 +783,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.9.3 =
+= 2.10 =
 
-Upgrade now to try latest export compatibility added for jet reviews.
+Upgrade now to get added features.
+
 
 = 2.9.2 =
 

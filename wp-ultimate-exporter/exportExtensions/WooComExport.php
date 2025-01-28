@@ -319,7 +319,10 @@ class WooCommerceExport extends ExportExtension{
 		if(is_plugin_active('advanced-product-fields-for-woocommerce/advanced-product-fields-for-woocommerce.php') ) {
 			$this->getPPOMData($id,$product_id);
 		}
-
+        if (is_plugin_active('woo-extra-product-options/woo-extra-product-options.php')) {
+			$this->getEPOData($id,$product_id);
+		}
+	
 		if ( is_plugin_active( 'yith-woocommerce-order-tracking-premium/init.php' ) ) {
 			self::$export_instance->data[$id]['ywot_tracking_code'] = 	$order->get_meta('ywot_tracking_code', true);
 			self::$export_instance->data[$id]['ywot_tracking_postcode'] = $order->get_meta('ywot_tracking_postcode', true);
@@ -386,7 +389,57 @@ class WooCommerceExport extends ExportExtension{
 
 
 	}
-
+	public function getEPOData($order_id, $product_ids)
+	{
+		global $wpdb;
+	
+		// Fetch all EPO field setups from the `wp_woocommerce_order_itemmeta` table
+		$table_name = $wpdb->prefix . 'woocommerce_order_itemmeta';
+		
+		$epo_data = $wpdb->get_results( $wpdb->prepare(
+			"SELECT * FROM $table_name WHERE order_item_id IN (SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_items WHERE order_id = %d)",
+			$order_id
+		) );
+	
+		$pro_meta_fields = [];
+	
+		if ( !empty( $epo_data ) ) {
+			foreach ( $epo_data as $data ) {
+				if ( is_serialized( $data->meta_value ) ) {
+					$meta_data = unserialize( $data->meta_value );
+				} else {
+					$meta_data = $data->meta_value;
+				}
+				
+				if ( is_array( $meta_data ) ) {
+					foreach ( $meta_data as $key => $field ) {
+						if (isset($field['title']) && isset($field['data_name'])) {
+							$pro_meta_fields[$field['title']] = $field['data_name'];
+						} else {
+						}
+					}
+				} else {
+					$pro_meta_fields[$data->meta_key] = $meta_data;
+				}
+			}
+		}
+	
+	
+		$order_items = wc_get_order($order_id)->get_items();
+	
+		foreach ($order_items as $item_id => $item) {
+			$item_meta = wc_get_order_item_meta($item_id, '', false);
+	
+			foreach ($item_meta as $meta_key => $meta_value) {
+				if (array_key_exists($meta_key, $pro_meta_fields)) {
+					if (is_array($meta_value) && isset($meta_value[0])) {
+						self::$export_instance->data[$order_id][$meta_key] = $meta_value[0];
+					} else {
+					}
+				}
+			}
+		}
+	}
 	/**
 	 * Code for Woocommerce Refund export
 	 * @param $id
