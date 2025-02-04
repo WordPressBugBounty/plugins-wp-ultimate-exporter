@@ -35,6 +35,20 @@ class PostExport extends ExportExtension{
 		$this->plugin = Plugin::getInstance();
 	}
 
+	public function get_total_rowCount(){
+		$product_counts = wp_count_posts('product');
+		$statuses = ['publish', 'draft', 'future', 'private', 'pending'];
+		
+		$total_count = 0;
+		foreach ($statuses as $status) {
+			if (isset($product_counts->$status)) {
+				$total_count += $product_counts->$status;
+			}
+		}
+
+		return $total_count;
+	}
+
 	/**
 	 * Get records based on the post types
 	 * @param $module
@@ -139,40 +153,91 @@ class PostExport extends ExportExtension{
 		/**
 		 * Check for specific status
 		 */
-		if($module == 'product' && is_plugin_active('woocommerce/woocommerce.php')){  //
-			if ($sitepress == null && !is_plugin_active('polylang/polylang.php') && !is_plugin_active('polylang-pro/polylang.php') && !is_plugin_active('polylang-wc/polylang-wc.php')  && !is_plugin_active('woocommerce-multilingual/wpml-woocommerce.php')) {
+		if($module == 'product' && is_plugin_active('woocommerce/woocommerce.php')){
+			if ($sitepress == null && !is_plugin_active('polylang/polylang.php') && !is_plugin_active('polylang-pro/polylang.php') && !is_plugin_active('polylang-wc/polylang-wc.php')  && !is_plugin_active('woocommerce-multilingual/wpml-woocommerce.php')  && !is_plugin_active('sitepress-multilingual-cms/sitepress.php')) {
 				if(!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
 					if($conditions['specific_period']['from'] == $conditions['specific_period']['to']){
 						$from_date = $conditions['specific_period']['from'];
 						$product_statuses = array('publish', 'draft', 'future', 'private', 'pending');
-						$args = array('date_query' => array(array('year'  => date( 'Y', strtotime( $from_date ) ),'month' => date( 'm', strtotime( $from_date ) ),'day'   => date( 'd', strtotime( $from_date ) ),),),'status' => $product_statuses,'numberposts' => -1,'orderby' => 'date');	
+						$args = array('date_query' => array(array('year'  => date( 'Y', strtotime( $from_date ) ),'month' => date( 'm', strtotime( $from_date ) ),'day'   => date( 'd', strtotime( $from_date ) ),),),'status' => $product_statuses,'limit'   => $limit,'offset'  => $offset,'orderby' => 'date');	
 					}else{
 						$from_date = $conditions['specific_period']['from'] ?? null;
 						$to_date   = $conditions['specific_period']['to'] ?? null;
 						$product_statuses = array('publish', 'draft', 'future', 'private', 'pending');
-						$args = array('date_query' => array(array('after' => $from_date,'before' => $to_date,'inclusive' => true,),),'status' => $product_statuses,'numberposts' => -1,'orderby' => 'date');
+						$args = array('date_query' => array(array('after' => $from_date,'before' => $to_date,'inclusive' => true,),),'status' => $product_statuses,'limit'   => $limit,'offset'  => $offset,'orderby' => 'date');
 					}
-					$products_count = wc_get_products($args);
+					$products = wc_get_products($args);
+				}
+				elseif(!empty($conditions['specific_post_id']['is_check']) && $conditions['specific_post_id']['is_check'] == 'true'){
+					$prod_id=explode(',',$conditions['specific_post_id']['post_id']);
+					$args=array('include' => $prod_id);
+					$products=wc_get_products($args);
+				}
+				elseif(!empty($conditions['specific_status']['status'])) {
+					$status = $conditions['specific_status']['status'];
+					if($conditions['specific_status']['status'] == 'all') {
+						$product_statuses = array('publish', 'draft', 'trash', 'private', 'pending');
+						$products = wc_get_products(array('status' => $product_statuses, 'limit'   => $limit,'offset'  => $offset,'orderby' => 'date'));		
+					} 
+					else{
+						$product_statuses = array($status);
+						$products = wc_get_products(array('status' => $product_statuses, 'limit'   => $limit,'offset'  => $offset,'orderby' => 'date'));	
+					}
 				}
 				else{
-				$product_statuses = array('publish', 'draft', 'future', 'private', 'pending');
-				$products_count = wc_get_products(array('status' => $product_statuses, 'numberposts' => -1 ,'orderby' => 'date'));
+
+					// Define product statuses
+					$product_statuses = ['publish', 'draft', 'future', 'private', 'pending'];
+
+					// Prepare query arguments
+					$args = [
+						'status'  => $product_statuses,
+						'limit'   => $limit,
+						'offset'  => $offset,
+						'orderby' => 'date',
+						'order'   => 'DESC', // Order products by date in descending order
+					];
+
+					// Fetch products
+					$products = wc_get_products($args);
 				}
+				// Initialize arrays to store IDs.
 				$product_ids = array();
-				if(!empty($products_count)){
-				$ids = array();
-				foreach ($products_count as $my_product) {
-					$ids[] = $my_product->get_id();
+				$variable_product_ids = array();
+				$variation_ids = array();
+
+				// Iterate through products to separate parent and variable products.
+				foreach ($products as $product) {
+					$product_ids[] = $product->get_id(); // Store all product IDs.
+					if ($product->is_type('variable')) {
+						$variable_product_ids[] = $product->get_id(); // Store variable product IDs.
+						$variation_ids = array_merge($variation_ids, $product->get_children()); // Get variations of variable products.
+					}
 				}
-				self::$export_instance->totalRowCount = count($ids); //get total count
-				$product_ids = !empty($ids) ? array_slice($ids, $offset, $limit) : [];
-				}
+				// Merge parent product IDs and variation IDs.
+				$all_product_ids = array_merge($product_ids, $variation_ids);
+				// Remove duplicate IDs.
+				$all_product_ids = array_unique($all_product_ids);
+				self::$export_instance->totalRowCount = $this->get_total_rowCount();
+				$product_ids = !empty($all_product_ids) ? $all_product_ids : [];
 				return $product_ids;
-			}else{
+			}
+			else{
 				//when polylang wpml active
 				$products = "select DISTINCT ID from {$wpdb->prefix}posts";
 				$products .= " where post_type = '$module'";
-				if(!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
+				if(!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true' && !empty($conditions['specific_status']['status'])) { //Period and Status both are TRUE 
+					if($conditions['specific_period']['from'] == $conditions['specific_period']['to']){
+						$status = $conditions['specific_status']['status'];
+						$products .= " and post_status = '$status'";
+						$products .= " and DATE(post_date) ='" . $conditions['specific_period']['from'] . "'";	
+					}else{
+						$status = $conditions['specific_status']['status'];
+						$products .= " and post_status = '$status'";
+						$products .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . " 23:00:00'";
+					}
+				}
+				elseif(!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
 					$products .= " and post_status in ('publish','draft','private','pending') ";
 					if($conditions['specific_period']['from'] == $conditions['specific_period']['to']){
 						$products .= " and DATE(post_date) ='".$conditions['specific_period']['from']."'";
@@ -180,12 +245,69 @@ class PostExport extends ExportExtension{
 						$products .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . " 23:00:00'";
 					}
 				}
-				else {
+				elseif(!empty($conditions['specific_status']['status'])) {
+					$status = $conditions['specific_status']['status'];
+					if($conditions['specific_status']['status'] == 'all') {
+					$products .= " and post_status in ('publish','draft','trash','private','pending') ORDER by post_date";
+					} 
+					else{
+					$products .= " and post_status = '$status' ORDER by post_date";
+					}
+				}
+				elseif(!empty($conditions['specific_post_id']['is_check']) && $conditions['specific_post_id']['is_check'] == 'true'){
+					$prod_ids =$conditions['specific_post_id']['post_id'];
+					$products .= "and ID in ($prod_ids)";
+
+				}
+				if(empty($conditions['specific_status']['status']) && empty($conditions['specific_period']['is_check'])) {
 					$products .= " and post_status in ('publish','draft','future','private','pending') ORDER by post_date";
 				}
 			   $products = $wpdb->get_col($products);
-			   self::$export_instance->totalRowCount = count($products);
-			   $products_ids = !empty($products) ? array_slice($products, $offset, $limit) : [];   
+			   $product_array = $products;
+			   foreach($products as $product_val){
+					$products_var = "select DISTINCT ID from {$wpdb->prefix}posts";
+					$products_var .= " where post_type = 'product_variation' and post_parent = '$product_val'";
+					if(!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true' && !empty($conditions['specific_status']['status'])) { //Period and Status both are TRUE 
+						if($conditions['specific_period']['from'] == $conditions['specific_period']['to']){
+							$status = $conditions['specific_status']['status'];
+							$products_var .= " and post_status = '$status'";
+							$products_var .= " and DATE(post_date) ='" . $conditions['specific_period']['from'] . "'";	
+						}else{
+							$status = $conditions['specific_status']['status'];
+							$products_var .= " and post_status = '$status'";
+							$products_var .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . " 23:00:00'";
+						}
+					}
+					elseif(!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
+						$products .= " and post_status in ('publish','draft','private','pending') ";
+						if($conditions['specific_period']['from'] == $conditions['specific_period']['to']){
+							$products_var .= " and DATE(post_date) ='".$conditions['specific_period']['from']."'";
+						}else{
+							$products_var .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . " 23:00:00'";
+						}
+					}
+					elseif(!empty($conditions['specific_status']['status'])) {
+						$status = $conditions['specific_status']['status'];
+						if($conditions['specific_status']['status'] == 'all') {
+						$products_var .= " and post_status in ('publish','draft','trash','private','pending') ORDER by post_date";
+						} 
+						else{
+						$products_var .= " and post_status = '$status' ORDER by post_date";
+						}
+					}
+					elseif(!empty($conditions['specific_post_id']['is_check']) && $conditions['specific_post_id']['is_check'] == 'true'){
+						$prod_ids =$conditions['specific_post_id']['post_id'];
+						$products_var .= "and ID in ($prod_ids)";
+
+					}
+					if(empty($conditions['specific_status']['status']) && empty($conditions['specific_period']['is_check'])) {
+						$products_var .= " and post_status in ('publish','draft','future','private','pending') ORDER by post_date";
+					}
+					$products_vars = $wpdb->get_col($products_var);
+					$product_array = array_merge($product_array,$products_vars);
+			   }
+			   self::$export_instance->totalRowCount = count($product_array);
+			   $products_ids = !empty($products) ? array_slice($product_array, $offset, $limit) : [];   
 			   return $products_ids;
 			}	
 		}

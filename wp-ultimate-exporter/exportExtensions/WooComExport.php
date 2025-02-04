@@ -322,7 +322,9 @@ class WooCommerceExport extends ExportExtension{
         if (is_plugin_active('woo-extra-product-options/woo-extra-product-options.php')) {
 			$this->getEPOData($id,$product_id);
 		}
-	
+		if (is_plugin_active('woo-custom-product-addons/start.php')) {
+			$this->getWCPAData($id,$product_id);
+		}	
 		if ( is_plugin_active( 'yith-woocommerce-order-tracking-premium/init.php' ) ) {
 			self::$export_instance->data[$id]['ywot_tracking_code'] = 	$order->get_meta('ywot_tracking_code', true);
 			self::$export_instance->data[$id]['ywot_tracking_postcode'] = $order->get_meta('ywot_tracking_postcode', true);
@@ -440,6 +442,65 @@ class WooCommerceExport extends ExportExtension{
 			}
 		}
 	}
+
+	public function getWCPAData($order_id, $product_ids)
+{
+    global $wpdb;
+
+    // Fetch all WCPA field setups from the `wp_woocommerce_order_itemmeta` table
+    $table_name = $wpdb->prefix . 'woocommerce_order_itemmeta';
+
+    // Fetching metadata for the given order items
+    $wcpa_data = $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM $table_name WHERE order_item_id IN (SELECT order_item_id FROM {$wpdb->prefix}woocommerce_order_items WHERE order_id = %d)",
+        $order_id
+    ));
+
+    $pro_meta_fields = [];
+
+    if (!empty($wcpa_data)) {
+        foreach ($wcpa_data as $data) {
+            // Check if the meta_value is serialized, then unserialize it
+            if (is_serialized($data->meta_value)) {
+                $meta_data = unserialize($data->meta_value);
+            } else {
+                $meta_data = $data->meta_value;
+            }
+
+            // Check if the meta_data is an array
+            if (is_array($meta_data)) {
+                foreach ($meta_data as $key => $field) {
+                    if (isset($field['title']) && isset($field['data_name'])) {
+                        // Adjusting keys to match export requirements
+                        $pro_meta_fields[$field['label']] = $field['value']; // Use label and value instead of title and data_name
+                    }
+                }
+            } else {
+                // If it's not an array, directly assign the meta_key to the fields
+                $pro_meta_fields[$data->meta_key] = $meta_data;
+            }
+        }
+    }
+
+    // Fetching all order items for the given order_id
+    $order_items = wc_get_order($order_id)->get_items();
+
+    foreach ($order_items as $item_id => $item) {
+        // Get item metadata for each order item
+        $item_meta = wc_get_order_item_meta($item_id, '', false);
+
+        // Loop through the item meta and check if the meta_key exists in the pro_meta_fields
+        foreach ($item_meta as $meta_key => $meta_value) {
+            if (array_key_exists($meta_key, $pro_meta_fields)) {
+                // Adjusting keys to match export requirements
+                if (is_array($meta_value) && isset($meta_value[0])) {
+                    self::$export_instance->data[$order_id][str_replace(' ', '-', strtolower($meta_key))] = $meta_value[0]; // Convert key format
+                }
+            }
+        }
+    }
+}
+
 	/**
 	 * Code for Woocommerce Refund export
 	 * @param $id
@@ -631,52 +692,477 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['variation_description'] = $var_description ?? ''; 
 		WooCommerceExport::$export_instance->data[$id]['variation_shipping_class'] = $shipping_class_term ? $shipping_class_term->name : '';		
 	}	
+	// public function getProductData($id, $type, $optionalType)
+	// {
+	// 	$product = wc_get_product($id);
+	// 	$product_datas = $product->get_data();
+	// 	$product_sku = $product->get_sku();
+	// 	WooCommerceExport::$export_instance->data[$id]['PRODUCTSKU'] = $product_sku; 
+	// 	$product_attributes = $product->get_attributes();
+	// 	if (!empty($product_attributes)) {
+	// 		foreach ($product_attributes as $attribute_key => $attribute) {
+	// 			$attribute_name[] = str_replace('pa_', '', $attribute['name']);
+	// 			$taxonomy_name = $attribute['taxonomy'];
+	// 			$attribute_options = $attribute['options'];
+	// 			$term_names = $att_values = [];
+	// 			foreach ($attribute_options as $term_key => $term_id) {
+	// 				$term = get_term_by('id', $term_id, $taxonomy_name);
+	// 				if (!empty($term->name)) {
+	// 					$term_names[] = $term->name;
+	// 				}
+	// 			}
+	// 			if (!empty($term_names)) {
+	// 				$att_values[] = implode('|', $term_names); 
+	// 			}
+	// 			$is_visible[] = $attribute['is_visible'];
+	// 			$is_variation[] = $attribute['is_variation'];
+	// 			$position[] = $attribute['position'];
+	// 			$is_taxonomy[] = $attribute['is_taxonomy'];
+	// 		}
+	// 		WooCommerceExport::$export_instance->data[$id]['product_attribute_name'] = implode('|', $attribute_name);
+	// 		WooCommerceExport::$export_instance->data[$id]['product_attribute_value'] = implode(',', $att_values);
+	// 		WooCommerceExport::$export_instance->data[$id]['product_attribute_visible'] = implode('|', $is_visible);
+	// 		WooCommerceExport::$export_instance->data[$id]['product_attribute_variation'] = implode('|', $is_variation);
+	// 		WooCommerceExport::$export_instance->data[$id]['product_attribute_position'] = implode('|', $position);
+	// 		WooCommerceExport::$export_instance->data[$id]['product_attribute_taxonomy'] = implode('|', $is_taxonomy);
+	// 	}
+
+
+	// 	$get_catalog_visibility = $product->get_catalog_visibility();
+	// 	$visibility_mapping = array('visible' => '1','catalog' => '2','search'  => '3','hidden'  => '4');
+	// 	WooCommerceExport::$export_instance->data[$id]['visibility'] = array_key_exists($get_catalog_visibility,$visibility_mapping) ? $visibility_mapping[$get_catalog_visibility] : '';
+
+	// 	$tax_status = $product->get_tax_status();
+	// 	$tax_status_mapping = array('taxable' => 1 , 'shipping' => 2, 'none' => 3);
+	// 	WooCommerceExport::$export_instance->data[$id]['tax_status'] = array_key_exists($tax_status,$tax_status_mapping) ? $tax_status_mapping[$tax_status] : '' ;
+
+	// 	$product_type = $product->get_type();
+	// 	$product_type_mapping = array('simple' => 1 , 'grouped' => 2, 'external' => 3, 'variable' => 4 , 'subscription' => 5 , 'variable-subscription' => 6 ,'bundle' => 7);
+	// 	WooCommerceExport::$export_instance->data[$id]['product_type'] = array_key_exists($product_type,$product_type_mapping) ? $product_type_mapping[$product_type] : '' ;
+
+	// 	if (has_term('featured', 'product_visibility', $id)) {
+	// 		WooCommerceExport::$export_instance->data[$id]['featured_product'] = '1';
+	// 	}
+	// 	WooCommerceExport::$export_instance->data[$id]['tax_class'] = $product_datas['tax_class'] ?? '';
+	// 	if (method_exists($product, 'get_file_paths')) {
+	// 		$file_paths = $product->get_file_paths();
+	// 		WooCommerceExport::$export_instance->data[$id]['_file_paths'] = isset($file_paths) ? $file_paths : '';
+	// 	} else {
+	// 		WooCommerceExport::$export_instance->data[$id]['_file_paths'] = '';
+	// 	}
+	// 	$edit_last = get_post_meta($id, '_edit_last', true);
+	// 	WooCommerceExport::$export_instance->data[$id]['_edit_last'] = $edit_last ?? '';
+	// 	$edit_lock = get_post_meta($id, '_edit_lock', true);
+	// 	WooCommerceExport::$export_instance->data[$id]['_edit_lock'] = $edit_lock ?? '';
+	// 	$thumbnail_id = get_post_thumbnail_id($product->get_id());
+	// 	$attachment_url = wp_get_attachment_url($thumbnail_id);
+	// 	WooCommerceExport::$export_instance->data[$id]['_thumbnail_id'] = $attachment_url ?? ''; 
+	// 	WooCommerceExport::$export_instance->data[$id]['manage_stock'] = $product->get_manage_stock() ? '1' : '';
+	// 	$stock_quantity = $product->get_stock_quantity();
+	// 	$stock_status = $product->get_stock_status();
+	// 	$low_stock_threshold = $product->get_low_stock_amount();
+	// 	$total_sales = $product->get_total_sales();
+	// 	WooCommerceExport::$export_instance->data[$id]['_stock'] = $stock_quantity ?? ''; 
+	// 	WooCommerceExport::$export_instance->data[$id]['_stock_status'] = $stock_status ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_low_stock_threshold'] = $low_stock_threshold ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_stock_qty'] = $stock_quantity ?? ''; 
+	// 	WooCommerceExport::$export_instance->data[$id]['_total_sales'] = $total_sales ?? '';
+	// 	$downloadable = $product->is_downloadable() ? 'yes' : 'no';
+	// 	$virtual = $product->is_virtual() ? 'yes' : 'no';
+	// 	$regular_price = $product->get_regular_price();
+	// 	$sale_price = $product->get_sale_price();
+	// 	$purchase_note = $product->get_purchase_note();	
+
+	// 	WooCommerceExport::$export_instance->data[$id]['_downloadable'] = $downloadable ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_virtual'] = $virtual ?? ''; 
+	// 	WooCommerceExport::$export_instance->data[$id]['_regular_price'] = $regular_price ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_sale_price'] = $sale_price ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_purchase_note'] = $purchase_note ?? '';
+
+	// 	$weight = $product->get_weight();
+	// 	$length = $product->get_length();
+	// 	$width = $product->get_width();
+	// 	$height = $product->get_height();
+	// 	$upsell_ids = $product->get_upsell_ids();
+	// 	$upsell_product_names = [];
+	// 	foreach ($upsell_ids as $up_id) {
+	// 		$upsell_product = wc_get_product($up_id);
+	// 		$upsell_product_names[] = $upsell_product ? $upsell_product->get_name() : '';
+	// 	}
+	// 	$cross_sell_ids = $product->get_cross_sell_ids();
+	// 	$cross_sell_product_names = [];
+	// 	foreach ($cross_sell_ids as $cross_id) {
+	// 		$cross_sell_product = wc_get_product($cross_id);
+	// 		$cross_sell_product_names[] = $cross_sell_product ? $cross_sell_product->get_name() : '';
+	// 	}
+	// 	WooCommerceExport::$export_instance->data[$id]['weight'] = $weight ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['length'] = $length ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['width'] = $width ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['height'] = $height ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['upsell_ids'] = implode(',', $upsell_product_names) ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['crosssell_ids'] = implode(',', $cross_sell_product_names) ?? '';	
+
+	// 	$grouping_product_ids = []; // Initialize an array to store child product IDs
+	// 	if ($product->is_type('grouped')) {
+	// 		$children = $product->get_children();
+	// 		foreach ($children as $child_id) {
+	// 			$child = wc_get_product($child_id);
+	// 			if (!empty($child)) {
+	// 				$grouping_product_ids[] = $child_id;
+	// 			}
+	// 		}
+	// 	}
+	// 	$grouping_product_ids_string = implode(',', $grouping_product_ids);
+	// 	WooCommerceExport::$export_instance->data[$id]['grouping_product'] = $grouping_product_ids_string;
+
+	// 	$sale_price_dates_from = $product->get_date_on_sale_from();
+	// 	$sale_price_dates_to = $product->get_date_on_sale_to();
+	// 	$sold_individually = $product->get_sold_individually();
+	// 	$backorders = $product->get_backorders();
+	// 	switch ($backorders) {
+	// 	case 'no':
+	// 		$backorders_no= '1';
+	// 		break;
+
+	// 	case 'notify':
+	// 		$backorders_no= '2';
+	// 		break;
+
+	// 	case 'yes':
+	// 		$backorders_no = '3';
+	// 		break;
+
+	// 	default:
+	// 		$backorders_no = '';
+	// 		break;
+	// 	}	
+	// 	// WooCommerceExport::$export_instance->data[$id]['grouping_product'] = implode(',',$grouping_products);
+	// 	WooCommerceExport::$export_instance->data[$id]['sale_price_dates_from'] = $sale_price_dates_from ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['sale_price_dates_to'] = $sale_price_dates_to ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['sold_individually'] = ($sold_individually > 0) ? 'yes' : 'no';
+	// 	WooCommerceExport::$export_instance->data[$id]['backorders'] = $backorders_no;
+	// 	$product_url = ($product->is_type('external')) ? $product->get_product_url() : '';
+	// 	$button_text = ($product->is_type('external')) ? $product->single_add_to_cart_text() : '';
+	// 	$featured =get_post_meta($product->get_id(), 'featured', true) ? '1' : '0';
+	// 	WooCommerceExport::$export_instance->data[$id]['product_url'] = $product_url;
+	// 	WooCommerceExport::$export_instance->data[$id]['button_text'] = $button_text;
+	// 	WooCommerceExport::$export_instance->data[$id]['featured'] = $featured;	
+	// 	$downloadable_files = [];
+	// 	$download_type = [];
+	// 	if(($product->is_type('variable'))){
+	// 		$download_limits = [];
+	// 		$download_expiries = [];
+	// 		$variations = $product->get_children();
+	// 		foreach ($variations as $variation_id) {
+	// 			$variation = wc_get_product($variation_id);
+	// 			// Check if the variation is downloadable
+	// 			if ($variation->is_downloadable()) {
+	// 				$downloads = $variation->get_downloads();
+	// 				foreach ($downloads as $download) {
+	// 					$file_url = $download->get_file(); // Get the file URL
+	// 					$file_name = $download->get_name(); // Get the file name
+	// 					$file_string = $file_name.','.$file_url;
+	// 					$downloadable_files[] = $file_string;
+	// 					if (strpos($file_url, 'http') === 0) {
+	// 						$download_type[] = 'external'; // If URL starts with http, it's an external URL
+	// 					} else {
+	// 						$download_type[] = 'file'; // Otherwise, it's a file URL
+	// 					}
+
+	// 				}
+	// 				$download_limit = $variation->get_download_limit(); // Default is -1 for unlimited
+	// 				$download_expiry = $variation->get_download_expiry(); // Default is -1 for no expiry
+	// 				// Store the values
+	// 				$download_limits[] = $download_limit;
+	// 				$download_expiries[] = $download_expiry;
+
+	// 			}
+	// 			$download_limit = !empty($download_limit) ? implode('|', $download_limits) : '';
+	// 			$download_expiry = !empty($download_expiry) ? implode('|', $download_expiries) : '';
+	// 			$download_type_str = !empty($download_type) ? implode('|', $download_type) : '';
+	// 			$download_file_str = !empty($downloadable_files) ? implode('|', $downloadable_files) : '';
+	// 		}
+	// 	}else{
+	// 		$downloads = $product->get_downloads();
+	// 		foreach ($downloads as $download) {
+	// 			$file_string = $download['name'].','.$download['file'];
+	// 			$downloadable_files[] = $file_string;
+	// 			if (strpos($download['file'], 'http') === 0) {
+	// 				$download_type[] = 'external'; // If URL starts with http, it's an external URL
+	// 			} else {
+	// 				$download_type[] = 'file'; // Otherwise, it's a file URL
+	// 			}
+	// 		}
+	// 		$download_type_str = !empty($download_type) ? implode('|', $download_type) : '';
+	// 		$download_file_str = !empty($downloadable_files) ? implode('|', $downloadable_files) : '';
+
+	// 		$download_limit = $product->get_download_limit();
+	// 		$download_expiry = $product->get_download_expiry();
+	// 	}
+
+	// 	WooCommerceExport::$export_instance->data[$id]['downloadable_files'] = $download_file_str;
+	// 	WooCommerceExport::$export_instance->data[$id]['download_limit'] = ($download_limit > -1) ? $download_limit : '';
+	// 	WooCommerceExport::$export_instance->data[$id]['download_expiry'] = ($download_expiry > -1) ? $download_expiry : '';
+	// 	WooCommerceExport::$export_instance->data[$id]['download_type'] = $download_type_str;
+
+	// 	$subscription_period = get_post_meta($id, '_subscription_period', true);
+	// 	$subscription_period_interval = get_post_meta($id, '_subscription_period_interval', true);
+	// 	$subscription_length = get_post_meta($id, '_subscription_length', true);
+	// 	$subscription_trial_period = get_post_meta($id, '_subscription_trial_period', true);
+	// 	$subscription_trial_length = get_post_meta($id, '_subscription_trial_length', true);
+	// 	$subscription_price = get_post_meta($id, '_subscription_price', true);
+	// 	$subscription_sign_up_fee = get_post_meta($id, '_subscription_sign_up_fee', true);
+
+	// 	WooCommerceExport::$export_instance->data[$id]['_subscription_period'] = $subscription_period ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_subscription_period_interval'] = $subscription_period_interval ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_subscription_length'] = $subscription_length ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_subscription_trial_period'] = $subscription_trial_period ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_subscription_trial_length'] = $subscription_trial_length ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_subscription_price'] = $subscription_price ?? '';
+	// 	WooCommerceExport::$export_instance->data[$id]['_subscription_sign_up_fee'] = $subscription_sign_up_fee ?? '';	
+	// 	// Retrieve barcode details
+	// 	if(is_plugin_active('yith-woocommerce-barcodes-premium/init.php' )){
+	// 		$barcode_protocol = get_post_meta($id, '_ywbc_barcode_protocol', true);
+	// 		$barcode_value = get_post_meta($id, '_ywbc_barcode_value', true);
+	// 		$barcode_display_value = get_post_meta($id, '_ywbc_barcode_display_value', true);
+	// 		WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_display_value'] = $barcode_display_value ?? '';
+	// 		WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_value'] = $barcode_value ?? '';
+	// 		WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_protocol'] = $barcode_protocol ?? '';
+	// 	}
+
+
+	// 	//woocommerce-product-bundles plugin
+	// 	//woocommerce-product-bundles plugin
+	// 	if (is_plugin_active('woocommerce-product-bundles/woocommerce-product-bundles.php')) {
+	// 		// Get the bundle product
+	// 		$bundle_product = wc_get_product($id);
+
+	// 		if ($bundle_product && $bundle_product->is_type('bundle')) {
+	// 			// Initialize default values
+	// 			$bundle_items = array();
+	// 			$optional_values = array();
+	// 			$quantity_min = array();
+	// 			$quantity_max = array();
+	// 			$price_values = array();
+	// 			$discount_values = array();
+	// 			$product_values = array();
+	// 			$cart_values = array();
+	// 			$order_values = array();
+	// 			$product_price_values = array();
+	// 			$cart_price_values = array();
+	// 			$order_price_values = array();
+	// 			$thumb_values = array();
+	// 			$override_values = array();
+	// 			$description_values = array();
+	// 			$override_title_values = array();
+	// 			$override_description_values = array();
+
+	// 			// Get bundle settings
+	// 			$min_bundle_size = $bundle_product->get_min_bundle_size();
+	// 			$max_bundle_size = $bundle_product->get_max_bundle_size();
+	// 			$edit_in_cart = $bundle_product->get_editable_in_cart() ? 'Yes' : 'No';
+	// 			$layout = $bundle_product->get_layout(); // Assuming this method exists
+	// 			$get_mode = $bundle_product->get_group_mode();
+	// 			if($get_mode == 'noindent'){
+	// 				$item_grouping = 'flat';
+	// 			}else if($get_mode == 'parent'){
+	// 				$item_grouping = 'grouped';
+	// 			}else{
+	// 				$item_grouping = '';
+	// 			}
+	// 			foreach ($bundle_product->get_bundled_items() as $bundled_item) {
+	// 				// Get bundled item product
+	// 				$bundled_product = $bundled_item->get_product();
+	// 				$bundle_items[] = $bundled_product->get_name();
+
+	// 				// Retrieve settings for each bundled item
+	// 				$optional_values[] = method_exists($bundled_item, 'is_optional') && $bundled_item->is_optional() ? 'Yes' : 'No';
+	// 				$quantity_min[] = method_exists($bundled_item, 'get_min_quantity') ? $bundled_item->get_min_quantity() : '';
+	// 				$quantity_max[] = method_exists($bundled_item, 'get_max_quantity') ? $bundled_item->get_max_quantity() : '';
+	// 				$price_values[] = method_exists($bundled_item, 'is_priced_individually') && $bundled_item->is_priced_individually() ? 'Yes' : 'No';
+	// 				$discount_values[] = method_exists($bundled_item, 'get_discount') ? $bundled_item->get_discount() : '';
+	// 				$product_values[] = method_exists($bundled_item, 'get_single_product_visibility') && $bundled_item->get_single_product_visibility() ? 'Yes' : 'No';
+	// 				$cart_values[] = method_exists($bundled_item, 'get_cart_visibility') && $bundled_item->get_cart_visibility() ? 'Yes' : 'No';
+	// 				$order_values[] = method_exists($bundled_item, 'get_order_visibility') && $bundled_item->get_order_visibility() ? 'Yes' : 'No';
+	// 				$product_price_values[] = method_exists($bundled_item, 'get_single_product_price_visibility') && $bundled_item->get_single_product_price_visibility() ? 'Yes' : 'No';
+	// 				$cart_price_values[] = method_exists($bundled_item, 'get_cart_price_visibility') && $bundled_item->get_cart_price_visibility() ? 'Yes' : 'No';
+	// 				$order_price_values[] = method_exists($bundled_item, 'get_order_price_visibility') && $bundled_item->get_order_price_visibility() ? 'Yes' : 'No';
+	// 				$thumb_values[] = method_exists($bundled_item, 'get_hide_thumbnail') && $bundled_item->get_hide_thumbnail() ? 'Yes' : 'No';
+	// 				$override_values[] = method_exists($bundled_item, 'get_override_title') && $bundled_item->get_override_title() ? 'Yes' : 'No';
+	// 				$description_values[] = method_exists($bundled_item, 'get_override_description') && $bundled_item->get_override_description() ? 'Yes' : 'No';
+	// 				$override_title_values[] = method_exists($bundled_item, 'get_override_title_value') ? $bundled_item->get_override_title_value() : '';
+	// 				$override_description_values[] = method_exists($bundled_item, 'get_override_description_value') ? $bundled_item->get_override_description_value() : '';
+	// 			}
+
+	// 			// Prepare export data
+	// 			WooCommerceExport::$export_instance->data[$id]['product_bundle_items'] = implode('|', $bundle_items) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['optional'] = implode('|', $optional_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['quantity_min'] = implode('|', $quantity_min) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['quantity_max'] = implode('|', $quantity_max) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['priced_individually'] = implode('|', $price_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['discount'] = implode('|', $discount_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['single_product_visibility'] = implode('|', $product_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['cart_visibility'] = implode('|', $cart_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['order_visibility'] = implode('|', $order_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['single_product_price_visibility'] = implode('|', $product_price_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['cart_price_visibility'] = implode('|', $cart_price_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['order_price_visibility'] = implode('|', $order_price_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['hide_thumbnail'] = implode('|', $thumb_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['override_title'] = implode('|', $override_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['override_description'] = implode('|', $description_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['override_title_value'] = implode('|', $override_title_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['override_description_value'] = implode('|', $override_description_values) ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['pb_sale_price'] = $bundle_product->get_sale_price() ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['pb_regular_price'] = $bundle_product->get_regular_price() ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['min_bundle_size'] = $min_bundle_size ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['max_bundle_size'] = $max_bundle_size ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['edit_in_cart'] = $edit_in_cart ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['layout'] = $layout ?? '';
+	// 			WooCommerceExport::$export_instance->data[$id]['item_grouping'] = $item_grouping ?? '';
+	// 		}
+	// 	}	
+
+	// }
 	public function getProductData($id, $type, $optionalType)
 	{
+		global $wpdb;
 		$product = wc_get_product($id);
+		
+	if(!empty($product)){
+		$booking_type ='';
+		$product_type = $product->get_type();
+		if($product_type == 'variation'){
+			$parent_id = $product->get_parent_id();
+			$parent_product = wc_get_product($parent_id);
+			$parent_sku = $parent_product->get_sku();
+			WooCommerceExport::$export_instance->data[$id]['parent'] = $parent_sku;		
+		}
 		$product_datas = $product->get_data();
 		$product_sku = $product->get_sku();
-		WooCommerceExport::$export_instance->data[$id]['PRODUCTSKU'] = $product_sku; 
+		WooCommerceExport::$export_instance->data[$id]['PRODUCTSKU'] = $product_sku ?? ''; 
 		$product_attributes = $product->get_attributes();
-		if (!empty($product_attributes)) {
-			foreach ($product_attributes as $attribute_key => $attribute) {
-				$attribute_name[] = str_replace('pa_', '', $attribute['name']);
-				$taxonomy_name = $attribute['taxonomy'];
-				$attribute_options = $attribute['options'];
-				$term_names = $att_values = [];
-				foreach ($attribute_options as $term_key => $term_id) {
-					$term = get_term_by('id', $term_id, $taxonomy_name);
-					if (!empty($term->name)) {
-						$term_names[] = $term->name;
-					}
+		if($product_type !=='variation'){
+			if (!empty($product_attributes)) {
+				$count =count($product_attributes);
+				$new_attr_array =array();
+				foreach ($product_attributes as $attribute_key => $attribute) {
+					$new_attr_array[] = $attribute;
 				}
-				if (!empty($term_names)) {
-					$att_values[] = implode('|', $term_names); 
+				array_unshift($new_attr_array,"");
+				unset($new_attr_array[0]);
+				$att_values = [];
+				$stored_id = [];
+				if(!empty($new_attr_array)){	
+					foreach ($new_attr_array as $attribute_key => $attribute) {
+						if (is_a($attribute, 'WC_Product_Attribute')) {
+							if(strpos($attribute['name'],'pa_') !== false){
+								$attr_name = str_replace('pa_', '', $attribute['name']);
+								$attr_name = $wpdb->get_var("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name='$attr_name'");
+							}
+							else{
+								$attr_name = $attribute['name'];
+							}
+							$swatch_values = [];
+					
+							WooCommerceExport::$export_instance->data[$id]['product_attribute_name'.$attribute_key]= $attr_name;
+		
+							
+		
+							$taxonomy_name = $attribute['taxonomy'];
+							$attribute_options = $attribute['options'];
+							$term_names = array();
+							foreach ($attribute_options as $term_key => $term_id) {
+								if(is_numeric($term_id)){
+									$term = get_term_by('id', $term_id, $taxonomy_name);
+									if (!empty($term->name)) {
+										$term_names[] = $term->name;	
+											// Retrieve swatch type and value if available
+										if(is_plugin_active( 'woo-variation-swatches/woo-variation-swatches.php' ) || is_plugin_active( 'woo-variation-swatches-pro/woo-variation-swatches.php' )){
+											$term_meta = $wpdb->get_results("SELECT meta_key,meta_value FROM {$wpdb->termmeta} WHERE term_id = $term->term_id ",ARRAY_A);
+											$attri_type = $wpdb->get_results( "SELECT attribute_type FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = '$attr_name' ",ARRAY_A);
+											$attri_type = !empty($attri_type[0]['attribute_type']) ? $attri_type[0]['attribute_type'] : '';
+											$term_meta = end($term_meta);
+											$swatch_value = '';
+											$swatch_types = [
+												'product_attribute_color' => 'color',
+												'product_attribute_image' => 'image',
+												'product_attribute_button' => 'button',
+												'product_attribute_radio' => 'radio'
+											];
+											
+											if (!empty($term_meta) && array_key_exists($term_meta['meta_key'], $swatch_types)) {
+												$swatch_type = $swatch_types[$term_meta['meta_key']];
+												$swatch_value = $term_meta['meta_value'];
+											} else {
+												$swatch_type = '';
+												$swatch_value = '';
+											}
+											$swatch_values[] = !empty($swatch_value) ? $term->name . '->' . $swatch_value : '';
+										}
+											
+									}
+									
+								}
+								else{ 
+									$term_names [] = $term_id;
+								}
+							}
+		
+		
+							if (is_array($swatch_values) && array_filter($swatch_values)) {
+								$attribute_name[] = $attr_name . '->' . $swatch_type;
+								$att_values[] = implode('|', $swatch_values);
+							} else {
+								if(!empty($attri_type) && !empty($term_names) && !empty($swatch_type)){
+									$attribute_name[] = $attr_name . '->' . $attri_type;
+									$att_values = implode('|', $term_names);
+								}
+								else if (!empty($term_names)) {
+									$attr_name = $wpdb->get_var("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name='$attr_name'");
+									$attribute_name[] = $attr_name ;
+									$att_values = implode(',', $term_names);
+								}
+							}
+							if (!empty($term_names)) {
+								$att_values = implode(',',$term_names); 
+							}
+							WooCommerceExport::$export_instance->data[$id]['product_attribute_value'.$attribute_key]  = $att_values;
+		
+							WooCommerceExport::$export_instance->data[$id]['product_attribute_visible'.$attribute_key] = $attribute['is_visible'];
+							$is_variation[] = $attribute['is_variation'];
+							$position[] = $attribute['position'];
+							$is_taxonomy[] = $attribute['is_taxonomy'];
+						}
+
+					}	
 				}
-				$is_visible[] = $attribute['is_visible'];
-				$is_variation[] = $attribute['is_variation'];
-				$position[] = $attribute['position'];
-				$is_taxonomy[] = $attribute['is_taxonomy'];
 			}
-			WooCommerceExport::$export_instance->data[$id]['product_attribute_name'] = implode('|', $attribute_name);
-			WooCommerceExport::$export_instance->data[$id]['product_attribute_value'] = implode(',', $att_values);
-			WooCommerceExport::$export_instance->data[$id]['product_attribute_visible'] = implode('|', $is_visible);
-			WooCommerceExport::$export_instance->data[$id]['product_attribute_variation'] = implode('|', $is_variation);
-			WooCommerceExport::$export_instance->data[$id]['product_attribute_position'] = implode('|', $position);
-			WooCommerceExport::$export_instance->data[$id]['product_attribute_taxonomy'] = implode('|', $is_taxonomy);
+		}
+		else{
+			if (!empty($product_attributes)) {
+				$i=1;
+				foreach ($product_attributes as $attribute_key => $attribute) {
+					$attr_name = str_replace('pa_', '', $attribute_key);
+					$attr_name = $wpdb->get_var("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name='$attr_name'");
+					$attr_value = $wpdb->get_var("SELECT name FROM {$wpdb->prefix}terms WHERE slug = '$attribute'");
+					WooCommerceExport::$export_instance->data[$id]['product_attribute_name'.$i] = $attr_name;
+					WooCommerceExport::$export_instance->data[$id]['product_attribute_value'.$i] = $attr_value;
+					$i++;
+				}
+			}	
 		}
 
 
 		$get_catalog_visibility = $product->get_catalog_visibility();
 		$visibility_mapping = array('visible' => '1','catalog' => '2','search'  => '3','hidden'  => '4');
 		WooCommerceExport::$export_instance->data[$id]['visibility'] = array_key_exists($get_catalog_visibility,$visibility_mapping) ? $visibility_mapping[$get_catalog_visibility] : '';
-
+		
 		$tax_status = $product->get_tax_status();
 		$tax_status_mapping = array('taxable' => 1 , 'shipping' => 2, 'none' => 3);
 		WooCommerceExport::$export_instance->data[$id]['tax_status'] = array_key_exists($tax_status,$tax_status_mapping) ? $tax_status_mapping[$tax_status] : '' ;
 
 		$product_type = $product->get_type();
-		$product_type_mapping = array('simple' => 1 , 'grouped' => 2, 'external' => 3, 'variable' => 4 , 'subscription' => 5 , 'variable-subscription' => 6 ,'bundle' => 7);
+		$product_type_mapping = array('simple' => 1 , 'grouped' => 2, 'external' => 3, 'variable' => 4 , 'subscription' => 5 , 'variable-subscription' => 6 ,'bundle' => 7,'variation' => '8' , 'jet_booking' => 9);
 		WooCommerceExport::$export_instance->data[$id]['product_type'] = array_key_exists($product_type,$product_type_mapping) ? $product_type_mapping[$product_type] : '' ;
 
 		if (has_term('featured', 'product_visibility', $id)) {
@@ -703,8 +1189,7 @@ class WooCommerceExport extends ExportExtension{
 		$total_sales = $product->get_total_sales();
 		WooCommerceExport::$export_instance->data[$id]['_stock'] = $stock_quantity ?? ''; 
 		WooCommerceExport::$export_instance->data[$id]['_stock_status'] = $stock_status ?? '';
-		WooCommerceExport::$export_instance->data[$id]['_low_stock_threshold'] = $low_stock_threshold ?? '';
-		WooCommerceExport::$export_instance->data[$id]['_stock_qty'] = $stock_quantity ?? ''; 
+		WooCommerceExport::$export_instance->data[$id]['_low_stock_threshold'] = $low_stock_threshold ?? ''; 
 		WooCommerceExport::$export_instance->data[$id]['_total_sales'] = $total_sales ?? '';
 		$downloadable = $product->is_downloadable() ? 'yes' : 'no';
 		$virtual = $product->is_virtual() ? 'yes' : 'no';
@@ -738,9 +1223,9 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['length'] = $length ?? '';
 		WooCommerceExport::$export_instance->data[$id]['width'] = $width ?? '';
 		WooCommerceExport::$export_instance->data[$id]['height'] = $height ?? '';
-		WooCommerceExport::$export_instance->data[$id]['upsell_ids'] = implode(',', $upsell_product_names) ?? '';
-		WooCommerceExport::$export_instance->data[$id]['crosssell_ids'] = implode(',', $cross_sell_product_names) ?? '';	
-
+		WooCommerceExport::$export_instance->data[$id]['upsell_ids'] = !empty($upsell_product_names) ? implode(',', $upsell_product_names) : '';
+		WooCommerceExport::$export_instance->data[$id]['crosssell_ids'] = !empty($cross_sell_product_names) ? implode(',', $cross_sell_product_names) : '';
+	
 		$grouping_product_ids = []; // Initialize an array to store child product IDs
 		if ($product->is_type('grouped')) {
 			$children = $product->get_children();
@@ -751,38 +1236,39 @@ class WooCommerceExport extends ExportExtension{
 				}
 			}
 		}
-		$grouping_product_ids_string = implode(',', $grouping_product_ids);
+		$grouping_product_ids_string = !empty($grouping_product_ids) ? implode(',', $grouping_product_ids) : '';
 		WooCommerceExport::$export_instance->data[$id]['grouping_product'] = $grouping_product_ids_string;
-
+		
 		$sale_price_dates_from = $product->get_date_on_sale_from();
 		$sale_price_dates_to = $product->get_date_on_sale_to();
 		$sold_individually = $product->get_sold_individually();
 		$backorders = $product->get_backorders();
 		switch ($backorders) {
-		case 'no':
-			$backorders_no= '1';
-			break;
-
-		case 'notify':
-			$backorders_no= '2';
-			break;
-
-		case 'yes':
-			$backorders_no = '3';
-			break;
-
-		default:
-			$backorders_no = '';
-			break;
-		}	
-		// WooCommerceExport::$export_instance->data[$id]['grouping_product'] = implode(',',$grouping_products);
+			case 'no':
+				$backorders_no= '1';
+				break;
+		
+			case 'notify':
+				$backorders_no= '2';
+				break;
+		
+			case 'yes':
+				$backorders_no = '3';
+				break;
+		
+			default:
+				$backorders_no = '';
+				break;
+		}
 		WooCommerceExport::$export_instance->data[$id]['sale_price_dates_from'] = $sale_price_dates_from ?? '';
 		WooCommerceExport::$export_instance->data[$id]['sale_price_dates_to'] = $sale_price_dates_to ?? '';
 		WooCommerceExport::$export_instance->data[$id]['sold_individually'] = ($sold_individually > 0) ? 'yes' : 'no';
 		WooCommerceExport::$export_instance->data[$id]['backorders'] = $backorders_no;
-		$product_url = ($product->is_type('external')) ? $product->get_product_url() : '';
+		// $product_url = ($product->is_type('external')) ? $product->get_product_url() : '';
+		$product_url = get_permalink($id);
+		
 		$button_text = ($product->is_type('external')) ? $product->single_add_to_cart_text() : '';
-		$featured =get_post_meta($product->get_id(), 'featured', true) ? '1' : '0';
+		$featured = get_post_meta($product->get_id(), 'featured', true) ? '1' : '0';
 		WooCommerceExport::$export_instance->data[$id]['product_url'] = $product_url;
 		WooCommerceExport::$export_instance->data[$id]['button_text'] = $button_text;
 		WooCommerceExport::$export_instance->data[$id]['featured'] = $featured;	
@@ -858,20 +1344,22 @@ class WooCommerceExport extends ExportExtension{
 		WooCommerceExport::$export_instance->data[$id]['_subscription_trial_period'] = $subscription_trial_period ?? '';
 		WooCommerceExport::$export_instance->data[$id]['_subscription_trial_length'] = $subscription_trial_length ?? '';
 		WooCommerceExport::$export_instance->data[$id]['_subscription_price'] = $subscription_price ?? '';
-		WooCommerceExport::$export_instance->data[$id]['_subscription_sign_up_fee'] = $subscription_sign_up_fee ?? '';	
+		WooCommerceExport::$export_instance->data[$id]['_subscription_sign_up_fee'] = $subscription_sign_up_fee ?? '';
+		
+		if ( is_plugin_active( 'yith-woocommerce-barcodes-premium/init.php' )){
 		// Retrieve barcode details
-		if(is_plugin_active('yith-woocommerce-barcodes-premium/init.php' )){
-			$barcode_protocol = get_post_meta($id, '_ywbc_barcode_protocol', true);
-			$barcode_value = get_post_meta($id, '_ywbc_barcode_value', true);
-			$barcode_display_value = get_post_meta($id, '_ywbc_barcode_display_value', true);
-			WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_display_value'] = $barcode_display_value ?? '';
-			WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_value'] = $barcode_value ?? '';
-			WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_protocol'] = $barcode_protocol ?? '';
+		$barcode_protocol = get_post_meta($id, '_ywbc_barcode_protocol', true);
+		$barcode_value = get_post_meta($id, '_ywbc_barcode_value', true);
+		$barcode_display_value = get_post_meta($id, '_ywbc_barcode_display_value', true);
+		WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_display_value'] = $barcode_display_value ?? '';
+		WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_value'] = $barcode_value ?? '';
+		WooCommerceExport::$export_instance->data[$id]['_ywbc_barcode_protocol'] = $barcode_protocol ?? '';
 		}
 
 
-		//woocommerce-product-bundles plugin
-		//woocommerce-product-bundles plugin
+	}
+		
+		// //woocommerce-product-bundles plugin
 		if (is_plugin_active('woocommerce-product-bundles/woocommerce-product-bundles.php')) {
 			// Get the bundle product
 			$bundle_product = wc_get_product($id);
