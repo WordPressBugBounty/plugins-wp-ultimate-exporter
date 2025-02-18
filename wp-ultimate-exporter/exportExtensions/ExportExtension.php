@@ -206,6 +206,15 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				echo wp_json_encode($total);
 				wp_die();
 			}
+
+			// WooCommerceCustomer module logic
+			if ($module == 'WooCommerceCustomer') {
+				$user_count = count_users();
+				$result = isset($user_count['avail_roles']['customer']) ? $user_count['avail_roles']['customer'] : 0;
+				$total = $result;
+				echo wp_json_encode($total);
+				wp_die();
+			}
 			
 			elseif ($module == 'JetReviews') {
 				global $wpdb;
@@ -546,6 +555,10 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			{
 				$optionalType = 'product';
 			}
+			elseif ($module == 'WooCommerceCustomer')
+			{
+				$optionalType = 'users';
+			}
 			elseif ($module == 'WPeCommerce')
 			{
 				$optionalType = 'wpsc-product';
@@ -602,8 +615,12 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				self::FetchDataByPostTypes();
 				break;
 			case 'Users':
-				self::FetchUsers();
+			case 'WooCommerceCustomer':
+				self::FetchUsers($this->module, $this->optionalType, $this->conditions, $this->offset, $this->limit, $this->mode);
 				break;
+			// case 'WooCommerceCustomer':
+			// 	ExportExtension::$wc_customer->FetchWooCommerceCustomer($this->module, $this->optionalType, $this->conditions, $this->offset, $this->limit, $this->mode);
+			// 	break;
 			case 'WooCommerceReviews':
 			case 'Comments':
 				self::FetchComments();
@@ -636,59 +653,113 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 		 *
 		 * @return array
 		 */
-		public function FetchUsers($mode = null)
+		public function FetchUsers($module, $optionalType, $conditions, $offset, $limit,$mode = null)
 		{
 			global $wpdb;
 			self::generateHeaders($this->module, $this->optionalType);
-			$get_available_user_ids = "select DISTINCT ID from {$wpdb->prefix}users u join {$wpdb->prefix}usermeta um on um.user_id = u.ID";
-			// Check for specific period
-			if ($this->conditions['specific_period']['is_check'] == 'true')
-			{
-				if ($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to'])
-				{
-					$get_available_user_ids .= " where u.user_registered >= '" . $this->conditions['specific_period']['from'] . "'";
-				}
-				else
-				{
-					$get_available_user_ids .= " where u.user_registered >= '" . $this->conditions['specific_period']['from'] . "' and u.user_registered <= '" . $this->conditions['specific_period']['to'] . " 23:00:00'";
-				}
-			}
-			$availableUsers = $wpdb->get_col($get_available_user_ids);
+			// 	$get_available_user_ids = "select DISTINCT ID from {$wpdb->prefix}users u join {$wpdb->prefix}usermeta um on um.user_id = u.ID";
 
-			if (!empty($this->conditions['specific_period']['is_check']) && $this->conditions['specific_period']['is_check'] == 'true')
-			{
-				if ($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to'])
-				{
-					$availableUserss = array();
-					foreach ($availableUsers as $user_value)
-					{
-						$get_user_date_time = $wpdb->get_results("SELECT user_registered FROM {$wpdb->prefix}users WHERE ID={$user_value}", ARRAY_A);
-						$get_user_date = date("Y-m-d", strtotime($get_user_date_time[0]['user_registered']));
-						if ($get_user_date == $this->conditions['specific_period']['from'])
-						{
-							$get_user_id_value[] = $user_value;
-						}
+			// // Check for specific period
+			// if ($this->conditions['specific_period']['is_check'] == 'true')
+			// {
+			// 	if ($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to'])
+			// 	{
+			// 		$get_available_user_ids .= " where u.user_registered >= '" . $this->conditions['specific_period']['from'] . "'";
+			// 	}
+			// 	else
+			// 	{
+			// 		$get_available_user_ids .= " where u.user_registered >= '" . $this->conditions['specific_period']['from'] . "' and u.user_registered <= '" . $this->conditions['specific_period']['to'] . " 23:00:00'";
+			// 	}
+			// }
+			// $availableUsers = $wpdb->get_col($get_available_user_ids);
 
+			// if (!empty($this->conditions['specific_period']['is_check']) && $this->conditions['specific_period']['is_check'] == 'true')
+			// {
+			// 	if ($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to'])
+			// 	{
+			// 		$availableUserss = array();
+			// 		foreach ($availableUsers as $user_value)
+			// 		{
+			// 			$get_user_date_time = $wpdb->get_results("SELECT user_registered FROM {$wpdb->prefix}users WHERE ID={$user_value}", ARRAY_A);
+			// 			$get_user_date = date("Y-m-d", strtotime($get_user_date_time[0]['user_registered']));
+			// 			if ($get_user_date == $this->conditions['specific_period']['from'])
+			// 			{
+			// 				$get_user_id_value[] = $user_value;
+			// 			}
+
+			// 		}
+			// 		$this->totalRowCount = count($get_user_id_value);
+			// 		$availableUserss = $get_user_id_value;
+			// 	}
+			// 	else
+			// 	{
+			// 		$this->totalRowCount = count($availableUsers);
+			// 		$get_available_user_ids .= " order by ID asc limit $this->offset, $this->limit";
+			// 		$availableUserss = $wpdb->get_col($get_available_user_ids);
+			// 	}
+			// }
+			// else
+			// {
+			// 	$this->totalRowCount = count($availableUsers);
+			// 	$get_available_user_ids .= " order by ID asc limit $this->offset, $this->limit";
+			// 	$availableUserss = $wpdb->get_col($get_available_user_ids);
+			// }
+			if ($module == 'WooCommerceCustomer') {
+				$this->module = 'Users';
+				// Get only users with the "customer" role
+				$args = [
+					'role'   => 'customer',
+					'fields' => 'ID'
+				];
+
+				// Check for specific period
+				if ($this->conditions['specific_period']['is_check'] == 'true') {
+					$from = $this->conditions['specific_period']['from'];
+					$to   = $this->conditions['specific_period']['to'];
+
+					if ($from == $to) {
+						$args['date_query'] = [
+							[
+								'after'     => $from,
+								'inclusive' => true,
+							]
+						];
+					} else {
+						$args['date_query'] = [
+							[
+								'after'     => $from,
+								'before'    => $to . ' 23:59:59',
+								'inclusive' => true,
+							]
+						];
 					}
-					$this->totalRowCount = count($get_user_id_value);
-					$availableUserss = $get_user_id_value;
 				}
-				else
-				{
-					$this->totalRowCount = count($availableUsers);
-					$get_available_user_ids .= " order by ID asc limit $this->offset, $this->limit";
-					$availableUserss = $wpdb->get_col($get_available_user_ids);
+
+				// Get customer user IDs
+				$availableUserss = get_users($args);
+			} else {
+				// Fetch all user IDs with the additional condition
+				$get_available_user_ids = "SELECT DISTINCT u.ID 
+										FROM {$wpdb->prefix}users u 
+										JOIN {$wpdb->prefix}usermeta um ON um.user_id = u.ID";
+
+				// Check for specific period
+				if ($this->conditions['specific_period']['is_check'] == 'true') {
+					if ($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to']) {
+						$get_available_user_ids .= " WHERE u.user_registered >= '" . esc_sql($this->conditions['specific_period']['from']) . "'";
+					} else {
+						$get_available_user_ids .= " WHERE u.user_registered >= '" . esc_sql($this->conditions['specific_period']['from']) . "' 
+													AND u.user_registered <= '" . esc_sql($this->conditions['specific_period']['to']) . " 23:59:59'";
+					}
 				}
-			}
-			else
-			{
-				$this->totalRowCount = count($availableUsers);
-				$get_available_user_ids .= " order by ID asc limit $this->offset, $this->limit";
+
 				$availableUserss = $wpdb->get_col($get_available_user_ids);
 			}
 
+
 			if (!empty($availableUserss))
 			{
+				$this->totalRowCount = count($availableUserss);
 				$whereCondition = '';
 				foreach ($availableUserss as $userId)
 				{

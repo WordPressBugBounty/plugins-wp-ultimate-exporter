@@ -72,6 +72,17 @@ class PostExport extends ExportExtension{
 				return $post_ids;
 			}			
 		}
+		if ($module == 'WooCommerceCustomer') {
+			// Get all customer user IDs
+			$post_ids = get_users([
+				'role'    => 'customer',
+				'fields'  => 'ID'
+			]);
+		
+			// Return the array of customer user IDs
+			return $post_ids;
+		}
+		
 		if($module == 'CustomPosts' && $optionalType == 'nav_menu_item'){
 			$get_menu_id = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}terms AS t LEFT JOIN {$wpdb->prefix}term_taxonomy AS tt ON tt.term_id = t.term_id WHERE tt.taxonomy = 'nav_menu' ", ARRAY_A);
 			$get_menu_arr = array_column($get_menu_id, 'term_id');
@@ -1595,6 +1606,35 @@ class PostExport extends ExportExtension{
 					}
 					self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
 				}
+				else if (is_object($value) && isset($value->meta_value)) {
+					$meta_value = $value->meta_value;
+
+					// Check if $meta_value is a JSON string
+					if (is_string($meta_value) && json_decode($meta_value)) {
+						$meta_value = json_decode($meta_value, true);
+					}
+
+					$is_unserialized = is_array($meta_value);
+
+					if ($is_unserialized) {
+						$output_array = [];
+
+						foreach ($meta_value as $key => $val) {
+							// If the value is an array (like 'week_days'), use '|' as a separator
+							if (is_array($val)) {
+								$output_array[] = implode('|', $val); // Use '|' for arrays
+							} else {
+								// Otherwise, just add the value as is
+								$output_array[] = $val;
+							}
+						}
+
+						// Join values with commas for CSV format
+						$value_all = implode(',', $output_array);
+
+						self::$export_instance->data[$id][$value->meta_key] = $value_all;
+					}
+				}
 				else{	
 					self::$export_instance->data[$id][ $value->meta_key ] = $value->meta_value;
 				}								
@@ -1606,7 +1646,7 @@ class PostExport extends ExportExtension{
 				if(in_array($optionalType , $taxonomies)){
 					$type_data =  get_term_meta($id,$value->meta_key);
 				}
-				elseif($optionalType == 'users'){
+				elseif($optionalType == 'user' || $optionalType == 'users'){
 					$type_data =  get_user_meta($id,$value->meta_key);
 				}
 				else{

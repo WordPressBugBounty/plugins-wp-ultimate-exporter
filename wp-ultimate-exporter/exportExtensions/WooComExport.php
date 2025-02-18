@@ -1070,7 +1070,7 @@ class WooCommerceExport extends ExportExtension{
 		
 							$taxonomy_name = $attribute['taxonomy'];
 							$attribute_options = $attribute['options'];
-							$term_names = array();
+							$term_names = $att_values = array();
 							foreach ($attribute_options as $term_key => $term_id) {
 								if(is_numeric($term_id)){
 									$term = get_term_by('id', $term_id, $taxonomy_name);
@@ -1110,25 +1110,31 @@ class WooCommerceExport extends ExportExtension{
 		
 		
 							if (is_array($swatch_values) && array_filter($swatch_values)) {
-								$attribute_name[] = $attr_name . '->' . $swatch_type;
-								$att_values[] = implode('|', $swatch_values);
+								$attribute_name = $attr_name . '->' . $swatch_type;
+								$att_values = implode(',', $swatch_values);
 							} else {
-								if(!empty($attri_type) && !empty($term_names) && !empty($swatch_type)){
-									$attribute_name[] = $attr_name . '->' . $attri_type;
-									$att_values = implode('|', $term_names);
-								}
-								else if (!empty($term_names)) {
+								if (!empty($attri_type) && !empty($term_names) && !empty($swatch_type)) {
+									$attribute_name = $attr_name . '->' . $attri_type;
+									$att_values = implode(',', $term_names);
+								} else if (!empty($term_names)) {
 									$attr_name = $wpdb->get_var("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name='$attr_name'");
-									$attribute_name[] = $attr_name ;
+									$attribute_name = $attr_name;
 									$att_values = implode(',', $term_names);
 								}
 							}
-							if (!empty($term_names)) {
-								$att_values = implode(',',$term_names); 
+							if (is_plugin_active('woo-variation-swatches/woo-variation-swatches.php') || is_plugin_active('woo-variation-swatches-pro/woo-variation-swatches.php')) {
+								WooCommerceExport::$export_instance->data[$id]['product_attribute_name' . $attribute_key] = $attribute_name;
+								WooCommerceExport::$export_instance->data[$id]['product_attribute_value' . $attribute_key]  = $att_values;
+							}else{
+								$att_values = implode(',', $term_names);
+								WooCommerceExport::$export_instance->data[$id]['product_attribute_value' . $attribute_key]  = $att_values;
 							}
-							WooCommerceExport::$export_instance->data[$id]['product_attribute_value'.$attribute_key]  = $att_values;
-		
-							WooCommerceExport::$export_instance->data[$id]['product_attribute_visible'.$attribute_key] = $attribute['is_visible'];
+							// if (!empty($term_names)) {
+							// 	$att_values = implode(',', $term_names);
+							// }
+
+
+							WooCommerceExport::$export_instance->data[$id]['product_attribute_visible' . $attribute_key] = $attribute['is_visible'];
 							$is_variation[] = $attribute['is_variation'];
 							$position[] = $attribute['position'];
 							$is_taxonomy[] = $attribute['is_taxonomy'];
