@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) )
  */	
 class PostExport extends ExportExtension{
 
-	protected static $instance = null,$mapping_instance,$export_handler,$export_instance;
+	protected static $instance = null,$mapping_instance,$export_handler,$export_instance,$jet_custom_table_export;
 	public $offset = 0;	
 	public $limit;
 	public $totalRowCount;
@@ -24,6 +24,7 @@ class PostExport extends ExportExtension{
 		if ( null == self::$instance ) {
 			self::$instance = new self;
 			self::$export_instance = ExportExtension::getInstance();
+			PostExport::$jet_custom_table_export = JetCustomTableExport::getInstance();
 		}
 		return self::$instance;
 	}
@@ -787,6 +788,7 @@ class PostExport extends ExportExtension{
 
 			/*jet releation export support added */
 			$get_rel_fields = $wpdb->get_results("SELECT id,labels, args, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE status = 'relation' ", ARRAY_A);
+			$get_cpt_fields = $wpdb->get_results("SELECT id,labels, args, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = '$optionalType' ", ARRAY_A);
 			if(!empty($get_rel_fields)){
 				foreach($get_rel_fields as $get_rel_values){
 					$imported_type = !empty($optionalType) ? $optionalType : $module;
@@ -902,6 +904,18 @@ class PostExport extends ExportExtension{
 							}
 						}
 						self::$export_instance->data[$id][ 'jet_related_post :: ' . $jet_relation_id ] = $get_rel_object_value;
+					}
+				}
+			}
+			else if(!empty($get_cpt_fields[0])){
+				$get_cpt_fields_args = maybe_unserialize($get_cpt_fields[0]['args']);
+				$check_custom_table = $get_cpt_fields_args['custom_storage'];
+				if($check_custom_table && isset($check_custom_table)){
+					$table_name = $wpdb->prefix . $optionalType . '_meta';
+					// Check if the table exists
+					if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name)) === $table_name) {
+						// Call the function if the table exists
+						PostExport::$jet_custom_table_export->get_custom_table_meta_fields($module,$id, $table_name, $optionalType);
 					}
 				}
 			}

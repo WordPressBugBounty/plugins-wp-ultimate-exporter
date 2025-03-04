@@ -8,6 +8,12 @@
 namespace Smackcoders\SMEXP;
 
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
+$parent_autoload_path = WP_PLUGIN_DIR . '/wp-ultimate-csv-importer/vendor/autoload.php';
+if (file_exists($parent_autoload_path)) {
+    require_once $parent_autoload_path;
+}
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 {
 
@@ -45,6 +51,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 		protected static $instance = null, $mapping_instance, $metabox_export, $jet_reviews_export, $jet_book_export, $jetengine_export, $export_handler, $post_export, $woocom_export, $review_export, $ecom_export, $learnpress_export;
 		protected $plugin, $activateCrm, $crmFunctionInstance;
 		public $plugisnScreenHookSuffix = null;
+		public $random_data = '';
 
 		public static function getInstance()
 		{
@@ -103,7 +110,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			$file_path = $_POST['filePath'] ?? '';	
 			$random_folder = wp_generate_password(16, false); // 16-character random folder name
    	
-			$allowed_directory = wp_upload_dir()['basedir'] . '/smack_uci_uploads/exports/'.$random_folder. '/'; // Example allowed directory
+			$allowed_directory = wp_upload_dir()['basedir'] . '/smack_uci_uploads/exports/'; // Example allowed directory
 			
 			$real_file_path = realpath($file_path);
 			$real_allowed_directory = realpath($allowed_directory);	
@@ -413,7 +420,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			{
 
 				$this->module = sanitize_text_field($_POST['module']);
-
+				$this->random_data = sanitize_text_field($_POST['random_data']);
 				//Whitelist of allowed export types
 				$allowed_export_types = ['csv', 'xls', 'xlsx', 'json', 'xml'];
 				// Sanitize and validate the export type
@@ -1203,12 +1210,14 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				foreach($getarg as $key => $value){				
 					$arg_data = $value['args'];				
 					break;
-				}			
-				$arg_data = unserialize($arg_data);
-				if(!empty($arg_data) && array_key_exists('has_single',$arg_data) && $arg_data['has_single']){
-					$this->data[$id]['cct_single_post_title'] = $arg_data['related_post_type_title'] ?? '';
-					$this->data[$id]['cct_single_post_content'] = $arg_data['related_post_type_content'] ?? '';				
 				}
+				if(!empty($arg_data)){
+					$arg_data = unserialize($arg_data);
+					if(!empty($arg_data) && array_key_exists('has_single',$arg_data) && $arg_data['has_single']){
+						$this->data[$id]['cct_single_post_title'] = $arg_data['related_post_type_title'] ?? '';
+						$this->data[$id]['cct_single_post_content'] = $arg_data['related_post_type_content'] ?? '';				
+					}
+				}	
 			}
 			/** Added post format for 'standard' property */
 			if ($exp_module == 'Posts' || $exp_module == 'CustomPosts' || $exp_module == 'WooCommerce')
@@ -1865,10 +1874,14 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					file_put_contents($index_php_file, $file_content);
 				}
 
-
-				$random_folder = wp_generate_password(16, false); // 16-character random folder name
-                $upload_dir = $upload_dir  . '/' . $random_folder . '/';
-				
+				if (empty($this->random_data))
+				{
+					$random_folder = wp_generate_password(16, false); // 16-character random folder name
+					$upload_dir = $upload_dir  . '/' . $random_folder . '/';
+				}
+				else{
+					$random_folder = $this->random_data;
+					$upload_dir = $upload_dir  . '/' . $random_folder . '/';				}
 				if (!is_dir($upload_dir))
 				{
 					wp_mkdir_p($upload_dir);
@@ -1931,7 +1944,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					{
 
 						file_put_contents($file, $csvData, FILE_APPEND | LOCK_EX);
-
+						
 				}
 				catch(\Exception $e)
 				{
@@ -1978,15 +1991,49 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				}
 				elseif ($this->checkSplit == 'true' && (($this->offset) > ($this->totalRowCount)))
 				{
-					$responseTojQuery = array(
-						'success' => true,
-						'new_offset' => $this->offset,
-						'limit' => $this->limit,
-						'total_row_count' => $this->totalRowCount,
-						'exported_file' => $fileURL,
-						'exported_path' => $fileURL,
-						'export_type' => $this->exportType
-					);
+					if ($this->exportType == 'xls' || $this->exportType == 'xlsx') {
+						// Convert CSV to XLS or XLSX depending on the export type
+						$newpath = str_replace('.csv', '.' . $this->exportType, $filePath);
+						$newfilename = str_replace('.csv', '.' . $this->exportType, $fileURL);
+						if($this->exportType == 'xlsx'){
+							$reader = IOFactory::createReader('Xlsx');
+						}else{
+							$reader = IOFactory::createReader('Xls');
+						}
+						if (file_exists($filePath)) {
+							$objPHPExcel = $reader->load($filePath);
+							$spreadsheet = new Spreadsheet(); // Create new Spreadsheet object
+							if($this->exportType == 'xlsx'){
+								$objWriter = IOFactory::createWriter($spreadsheet, 'Xlsx');
+							}else{
+								$objWriter = IOFactory::createWriter($spreadsheet, 'Xls');
+							}
+							$objWriter->save($newpath);
+						}
+				
+						// Response after conversion
+						$responseTojQuery = array(
+							'success' => true,
+							'new_offset' => $this->offset,
+							'limit' => $this->limit,
+							'total_row_count' => $this->totalRowCount,
+							'exported_file' => $newfilename,
+							'exported_path' => $newpath,
+							'export_type' => $this->exportType
+						);
+					}				
+					else {
+						// If export type is neither XLS nor XLSX, return original file
+						$responseTojQuery = array(
+							'success' => true,
+							'new_offset' => $this->offset,
+							'limit' => $this->limit,
+							'total_row_count' => $this->totalRowCount,
+							'exported_file' => $fileURL,
+							'exported_path' => $fileURL,
+							'export_type' => $this->exportType
+						);
+					}
 				}
 				elseif (!(($this->offset) > ($this->totalRowCount)))
 				{
@@ -1995,26 +2042,57 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 						'new_offset' => $this->offset,
 						'limit' => $this->limit,
 						'total_row_count' => $this->totalRowCount,
+						// 'exported_file' => $random_folder.'/'.$filename,
+						// 'exported_path' => $random_folder.'/'.$filePath,
 						'exported_file' => $filename,
 						'exported_path' => $filePath,
-						'export_type' => $this->exportType
+						'export_type' => $this->exportType,
+						'random_data' => $random_folder
 					);
 				}
 				else
 				{
-					$responseTojQuery = array(
-						'success' => true,
-						'new_offset' => $this->offset,
-						'limit' => $this->limit,
-						'total_row_count' => $this->totalRowCount,
-						'exported_file' => $filename,
-						'exported_path' => $filePath,
-						'export_type' => $this->exportType
-					);
+					// General case where we perform export
+					if ($this->exportType == 'xls' || $this->exportType == 'xlsx') {
+						// Convert CSV to XLS or XLSX depending on the export type
+						$newpath = str_replace('.csv', '.' . $this->exportType, $filePath);
+						$newfilename = str_replace('.csv', '.' . $this->exportType, $fileURL);
+				
+						// Load the CSV and save as XLS or XLSX based on export type
+						$reader = IOFactory::createReader('Csv');
+						$objPHPExcel = $reader->load($filePath);
+						if ($this->exportType == 'xls') {
+							// If export type is XLS, save it as XLS
+							$objWriter = IOFactory::createWriter($objPHPExcel, 'Xls');
+						} else {
+							// If export type is XLSX, save it as XLSX
+							$objWriter = IOFactory::createWriter($objPHPExcel, 'Xlsx');
+						}
+						$objWriter->save($newpath);
+						
+						$responseTojQuery = array(
+							'success' => true,
+							'new_offset' => $this->offset,
+							'limit' => $this->limit,
+							'total_row_count' => $this->totalRowCount,
+							'exported_file' => $newfilename,
+							'exported_path' => $newpath,
+							'export_type' => $this->exportType
+						);
+					} else {
+						// If export type is neither XLS nor XLSX, return original file
+						$responseTojQuery = array(
+							'success' => true,
+							'new_offset' => $this->offset,
+							'limit' => $this->limit,
+							'total_row_count' => $this->totalRowCount,
+							'exported_file' => $filename,
+							'exported_path' => $filePath,
+							'export_type' => $this->exportType
+						);
+					}
 				}
-
 				// $responseTojQuery["file_path"]=WP_PLUGIN_DIR . '/wp-ultimate-exporter/download.php';
-
 				if ($this->export_mode == 'normal')
 				{
 					echo wp_json_encode($responseTojQuery);
