@@ -5,8 +5,8 @@ Tags: export, wordpress csv export, export woocommerce products, export orders, 
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.13
-Version: 2.13
+Stable tag: 2.14
+Version: 2.14
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -381,6 +381,11 @@ In the case of WooCommerce customers below listed user meta is exported:
 * Select the 'Comments' module in the export tab to export comments. Provide filename, and file type, choose filters, and click export.
 
 == Changelog ==
+
+= 2.14 =
+Release date:** 2025-03-18
+* Added: TSV (Tab-Separated Values) file format support
+* Added: Compatibility with the latest MetaBox update(MetaBox AIO now includes MetaBox) 
 
 = 2.13 =
 Release date:** 2025-03-04 
@@ -791,6 +796,6 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.12 =
+= 2.14 =
 
-Upgrade now to get XLSX export support and compatibility for Secure Custom Fields.
+Upgrade now to get latest updates.

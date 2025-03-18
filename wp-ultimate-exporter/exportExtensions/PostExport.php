@@ -926,7 +926,7 @@ class PostExport extends ExportExtension{
 		}
 
 		//added for metabox plugin fields
-		if(is_plugin_active('meta-box/meta-box.php')){
+		if(is_plugin_active('meta-box/meta-box.php') || is_plugin_active('meta-box-aio/meta-box-aio.php')){
 			$metabox_import_type = self::import_post_types($module, $optionalType);
 			$metabox_fields = \rwmb_get_object_fields( $metabox_import_type ); 
 

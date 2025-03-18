@@ -422,7 +422,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				$this->module = sanitize_text_field($_POST['module']);
 				$this->random_data = sanitize_text_field($_POST['random_data']);
 				//Whitelist of allowed export types
-				$allowed_export_types = ['csv', 'xls', 'xlsx', 'json', 'xml'];
+				$allowed_export_types = ['csv', 'xls', 'xlsx', 'json', 'xml', 'tsv'];
 				// Sanitize and validate the export type
 				$export_type = isset($_POST['exp_type']) ? sanitize_text_field($_POST['exp_type']) : 'csv';
 				$this->exportType = in_array($export_type, $allowed_export_types) ? $export_type : 'csv';	
@@ -1877,11 +1877,11 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				if (empty($this->random_data))
 				{
 					$random_folder = wp_generate_password(16, false); // 16-character random folder name
-					$upload_dir = $upload_dir  . '/' . $random_folder . '/';
+					$upload_dir = $upload_dir  . $random_folder . '/';
 				}
 				else{
 					$random_folder = $this->random_data;
-					$upload_dir = $upload_dir  . '/' . $random_folder . '/';				}
+					$upload_dir = $upload_dir . $random_folder . '/';				}
 				if (!is_dir($upload_dir))
 				{
 					wp_mkdir_p($upload_dir);
@@ -1935,6 +1935,15 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 					$xml_data = new \SimpleXMLElement('<?xml version="1.0"?><data></data>');
 					$this->array_to_xml($data, $xml_data);
 					$result = $xml_data->asXML($file);
+				}
+				elseif($this->exportType == 'tsv'){
+					$files = fopen($file, "w");
+					$headers = array_keys(reset($data)); // Get the keys from the first post
+					fputcsv($files, $headers, "\t"); 
+					foreach ($data as $row) {
+						fputcsv($files, $row, "\t"); // Use tab as delimiter
+					}
+					
 				}
 				else
 				{
@@ -2683,7 +2692,8 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 				function get_common_unserialize($serialize_data)
 				{
-					return unserialize($serialize_data);
+
+					return json_decode($serialize_data, true);
 				}
 
 				/**
@@ -3342,8 +3352,8 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 							if (!empty($meta_value))
 							{
 								if (is_serialized($meta_value))
-								{
-									return unserialize($meta_value);
+								{								
+									return json_decode($meta_value, true);
 								}
 								else if (is_array($meta_value))
 								{
