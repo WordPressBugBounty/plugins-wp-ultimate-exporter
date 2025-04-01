@@ -1,12 +1,12 @@
-﻿=== Export All Posts, Products, Orders, Refunds & Users ===
+﻿﻿=== Export All Posts, Products, Orders, Refunds & Users ===
 Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.14
-Version: 2.14
+Stable tag: 2.15
+Version: 2.15
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -32,6 +32,7 @@ With this plugin, you can export all your WordPress content—including posts, p
 - **Time-Based Data Export** – Export posts, orders, or records from a specific time frame.
 - **Post Status Filtering** – Export data based on post status (Published, Draft, Pending, etc.).
 - **Author-Specific Export** – Extract content created by specific authors.
+- **Quick Migration Zip Export** -  Export any post type as a bundled ZIP with default template info for easy migration using the One-Click Import option in the Importer.
 
 Unlock advanced filtering options and seamless Google Sheets export with **[Ultimate Exporter Pro](https://www.smackcoders.com/wp-ultimate-exporter.html?utm_source=wordpress&utm_medium=readme&utm_campaign=free_exporter).**
 
@@ -72,6 +73,16 @@ The **WP Ultimate Exporter** plugin follows a streamlined two-step process:
 2. **Customize & Export** – Apply filters like file format, author, post status, or date range, then download the file.
 
 **Protect your WordPress content today with WP Ultimate Exporter.** Download it now from the WordPress Plugin Directory.
+
+= Migration Made Easy =
+
+The latest release introduces a feature that allows you to download a migration ZIP file, which can then be imported into the target site using the importer plugin. Here's how to export the migration file:
+
+1. **Select Content Type** – Go to the export page and choose a content or module type from the list.
+2. **Configure Migrate Option** – On the next page, provide a name for the file, select the file type, and configure any advanced export settings like filters. Once done, click the Migrate button to generate a ZIP file with all the data and default mapping info. After export is complete, click the Bundle button to download the ZIP file, ready for migration.
+
+For more details on this migration feature, refer to our documentation on [How to Migrate WordPress Site Data Using One-Click Import & Migrate Feature](https://www.smackcoders.com/documentation/wp-ultimate-csv-importer-pro/migrate-wordpress-and-woocommerce-data?utm_source=wordpress&utm_medium=readme&utm_campaign=free_exporter).
+
 
 = Unlock WP Ultimate Exporter Pro =
 
@@ -117,6 +128,10 @@ If you find WP Ultimate Exporter helpful, please **[rate us](https://wordpress.o
 5. Export files published by a particular author.
 
 6. Select and export specific fields of any Post type.
+
+7. Migrate Option Configuration in Export Settings
+
+8. Export Bundle Download Page
 
 == Frequently Asked Questions ==
 
@@ -382,20 +397,24 @@ In the case of WooCommerce customers below listed user meta is exported:
 
 == Changelog ==
 
+= 2.15 =
+
+* Added: New Migrate option to export all data with default mapping settings for the selected post type.
+
 = 2.14 =
-Release date:** 2025-03-18
+
 * Added: TSV (Tab-Separated Values) file format support
 * Added: Compatibility with the latest MetaBox update(MetaBox AIO now includes MetaBox) 
 
 = 2.13 =
-Release date:** 2025-03-04 
+
 * New Feature: Added support for XLSX export.  
 * New Feature: Added compatibility for Secure Custom Fields.  
 * Fix: Resolved issues with CSV file download and count accuracy.
 
 
 = 2.12 =
-Release date: 2025-02-18
+
 * New Feature: Added export support for WooCommerce Customer’s Module Export.
 * Enhancement: Improved UI for a better user experience.
 * Improvement: Enhanced notification system for better clarity and user guidance.
@@ -796,6 +815,6 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.14 =
+= 2.15 =
 
-Upgrade now to get latest updates.
+Upgrade now to unlock the new export functionality with the Migrate option.

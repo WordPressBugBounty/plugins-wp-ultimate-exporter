@@ -1856,6 +1856,123 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			} 											
 		}
 
+		public  function getPostTypes(){
+			$custom_array = array('post', 'page', 'wpsc-product', 'product_variation', 'shop_order', 'shop_coupon', 'shop_order_refund','mp_product_variation');
+			$other_posttypes = array('attachment','revision','wpsc-product-file','mp_order','shop_webhook','custom_css','customize_changeset','oembed_cache','user_request','_pods_template','wpmem_product','wp-types-group','wp-types-user-group','wp-types-term-group','gal_display_source','display_type','displayed_gallery','wpsc_log','lightbox_library','scheduled-action','cfs','_pods_pod','_pods_field','acf-field','acf-field-group','wp_block','ngg_album','ngg_gallery','nf_sub','wpcf7_contact_form','iv_payment','llms_quiz','llms_question','llms_membership','llms_engagement','llms_order','llms_transaction','llms_achievement','llms_my_achievement','llms_my_certificate','llms_email','llms_voucher','llms_access_plan','llms_form','section','llms_certificate');
+			$importas = array(
+				'Posts' => 'Posts',
+				'Pages' => 'Pages',
+				'Users' =>'Users',
+				'Comments' => 'Comments',
+	
+			);
+			$all_post_types = get_post_types();
+			array_push($all_post_types, 'widgets');
+			// To avoid toolset repeater group fields from post types in dropdown
+			global $wpdb;
+			$fields = $wpdb->get_results("select meta_value from {$wpdb->prefix}postmeta where meta_key = '_wp_types_group_fields' ");
+			foreach($fields as $value){
+				$repeat_values = $value->meta_value;
+				$types_fields = explode( ',', $repeat_values);
+	
+				foreach($types_fields as $types_value){
+					$explode = explode('_',$types_value);
+					if (count($explode)>1) {
+						if (in_array('repeatable',$explode)) {
+							$name = $wpdb->get_results("SELECT post_name FROM ".$wpdb->prefix."posts WHERE id ='{$explode[3]}'");	
+							$type_repeat_value =  $name[0]->post_name;
+	
+							if(in_array($type_repeat_value , $all_post_types)){
+								unset($all_post_types[$type_repeat_value]);
+							}
+						}else{
+	
+						}
+					}else{
+	
+					}
+				}	
+			}
+	
+			foreach($other_posttypes as $ptkey => $ptvalue) {
+				if (in_array($ptvalue, $all_post_types)) {
+					unset($all_post_types[$ptvalue]);
+				}
+			}
+			foreach($all_post_types as $key => $value) {
+				if(!in_array($value, $custom_array)) {
+					if(is_plugin_active('events-manager/events-manager.php') && $value == 'event') {
+						$importas['Events'] = $value;
+					} elseif(is_plugin_active('events-manager/events-manager.php') && $value == 'event-recurring') {
+						$importas['Recurring Events'] = $value;
+					} elseif(is_plugin_active('events-manager/events-manager.php') && $value == 'location') {
+						$importas['Event Locations'] = $value;
+					} else {
+						$importas[$value] = $value;
+					}
+					$custompost[$value] = $value;
+				}
+			}
+			//Ticket import
+			if(is_plugin_active('events-manager/events-manager.php')){
+				$importas['Tickets'] = 'ticket';
+			}
+			if(is_plugin_active('wp-customer-reviews/wp-customer-reviews-3.php') || is_plugin_active('wp-customer-reviews/wp-customer-reviews.php') ){
+				$importas['Customer Reviews'] = 'CustomerReviews';
+				if(isset($importas['wpcr3_review'])) {
+					unset($importas['wpcr3_review']);
+				}
+			}
+	
+		 // Add JetReviews if the JetReviews plugin is active
+			 if(is_plugin_active('jet-reviews/jet-reviews.php')) {
+			$importas['JetReviews'] = 'jetreviews';
+			}
+			if(is_plugin_active('woocommerce/woocommerce.php')){
+				$importas['WooCommerce Product'] ='WooCommerce';
+			//	$importas['WooCommerce Product Variations'] ='WooCommerceVariations';
+				$importas['WooCommerce Orders'] = 'WooCommerceOrders';
+				$importas['WooCommerce Customer'] = 'WooCommerceCustomer';
+				$importas['WooCommerce Reviews'] ='WooCommerceReviews';
+				$importas['WooCommerce Coupons'] = 'WooCommerceCoupons';
+				$importas['WooCommerce Refunds'] = 'WooCommerceRefunds';
+				unset($importas['product']);
+			}
+			if(is_plugin_active('wp-e-commerce/wp-shopping-cart.php')){
+				$importas['WPeCommerce Products'] ='WPeCommerce';
+				$importas['WPeCommerce Coupons'] = 'WPeCommerceCoupons';
+			}
+			if(is_plugin_active('gravityforms/gravityforms.php')){
+				$importas['GFEntries'] ='GFEntries';
+				
+			}
+			if(is_plugin_active('jet-engine/jet-engine.php')){
+				$get_slug_name = $wpdb->get_results("SELECT slug FROM {$wpdb->prefix}jet_post_types WHERE status = 'content-type'");
+			
+				if(!empty($get_slug_name)){
+					foreach($get_slug_name as $key => $get_slug){
+						$value = $get_slug->slug;
+						$importas[$value] = $value;
+					}
+				}
+			}
+			if(is_plugin_active('jet-booking/jet-booking.php')){
+				$importas['JetBooking'] ='JetBooking';
+			}
+			return $importas;
+			
+		}
+
+		public function getTaxonomies(){
+			$i = 0;
+			foreach (get_taxonomies() as $key => $value) {
+					$response['taxonomies'][$i] = $value;
+					$i++;
+			}
+			return $response;
+			
+		}
+
 		/**
 		 * Export Data
 		 * @param $data
@@ -1986,6 +2103,156 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				}
 				$filename = $upload_url . $this->fileName . '.' . 'zip';
 				}
+
+			//	if (($this->offset > $this->totalRowCount) && $this->checkSplit == 'true') {
+					// Define the export file (CSV or other type)
+					$file = $upload_dir . $this->fileName . '.' . $this->exportType;
+					$allfiles[] = $file;
+				//	$this->isMigration = true;
+				$this->isMigration = $_POST['isMigrate'];
+					// Check if migration is true
+					if ($this->isMigration === 'true' && (($this->offset) > ($this->totalRowCount))) {
+						
+						// Create JSON file
+						$headers = self::generateHeaders($this->module, $this->optionalType);
+						if ($module == 'CustomPosts' || $module == 'Taxonomies' || $module == 'Categories' || $module == 'Tags')
+						{
+							if(is_plugin_active('events-manager/events-manager.php') &&$optionalType == 'event'){
+								$optionalType = 'Events';
+							}
+							$default = $this->get_fields($optionalType); // Call the super class function
+			
+						}
+						else
+						{
+							$default = $this->get_fields($module);
+						}
+
+						
+						function transformFieldsArray($fieldsArray) {
+							$csv_fields = [];
+							$fields = [];
+						
+							foreach ($fieldsArray as $fieldGroup) {
+								$groupKey = key($fieldGroup); // Get the group name (e.g., "core_fields", "terms_and_taxonomies")
+								$groupFields = [];
+						
+								foreach ($fieldGroup[$groupKey] as $field) {
+									$groupFields[] = [
+										'label' => $field['label'],
+										'name' => $field['name']
+									];
+									$csv_fields[] = $field['name']; // Collect all field names for CSV
+								}
+						
+								$fields[] = [$groupKey => $groupFields];
+							}
+						
+							return [
+								'csv_fields' => array_values(array_unique($csv_fields)), // Ensure unique field names
+								'fields' => $fields
+							];
+						}
+						
+					
+						$fieldsArray = $default['fields'];
+						$headers =  transformFieldsArray($fieldsArray);
+
+
+						$jsonFile = $upload_dir . $this->fileName . '.json';
+						
+						$postTypes = $this->getPostTypes();
+					//	print_r($postTypes);
+					$import_record_post = array_keys($postTypes);
+					if(is_plugin_active('woocommerce/woocommerce.php')){
+						$importas = [
+							'WooCommerce' => 'WooCommerce Product' ,
+						   //'WooCommerce Product Variations' , 'WooCommerceVariations',
+							'WooCommerceOrders' => 'WooCommerce Orders' ,
+							'WooCommerceCustomer' => 'WooCommerce Customer' , 
+							'WooCommerceReviews' => 'WooCommerce Reviews' ,
+							'WooCommerceCoupons' => 'WooCommerce Coupons' ,
+							'WooCommerceRefunds' => 'WooCommerce Refunds' ,
+					   ];
+						
+					   if (isset($importas[$this->module])) {		
+							$this->module = $importas[$this->module];
+					   }
+						
+				}
+					
+					
+					
+
+					
+						$taxonomies = $this->getTaxonomies();
+						$jsonData = [
+							'file_name' => $this->fileName,
+							'total_rows' => $this->totalRowCount,
+							'selectedtype' => $this->module,
+							'optionalType' => $this->optionalType,
+							'headers' => $headers,
+							'export_time' => date('Y-m-d H:i:s'),
+							'status' => 'completed',
+							'posttype' => $import_record_post,
+							'taxonomy' => $taxonomies['taxonomies'],
+							'currentuser' => 'administrator',
+							'get_key' => false,
+							'show_template' => false,
+							'file_iteration' => 5,
+							'MediaType' => 'Local',
+							'update_fields' => ['ID', 'post_title', 'post_name'],
+							'use_ExistingImage' => true,
+							'media_handle_option' => true,
+							'postContent_image_option' => false,
+							'highspeed' => false,
+							'mappingFilterCheck' => false
+						];
+						
+						file_put_contents($jsonFile, json_encode($jsonData, JSON_PRETTY_PRINT));
+				
+						// Add JSON file to the list of files to zip
+						$allfiles[] = $jsonFile;
+				
+						// Create ZIP file (smbundle_ prefix)
+						$zipname = $upload_dir . 'smbundle_' . $this->fileName . '.zip';
+						$zip = new \ZipArchive;
+				
+						if ($zip->open($zipname, \ZipArchive::CREATE) === true) {
+							foreach ($allfiles as $allfile) {
+								// Ensure only CSV, JSON, or related export files are included
+								if (preg_match('/\.(csv|json|xml|xls|xlsx|tsv' . preg_quote($this->exportType, '/') . ')$/', $allfile)) {
+									$newname = str_replace($upload_dir, '', $allfile);
+									$zip->addFile($allfile, $newname);
+								}
+							}
+							$zip->close();
+						}
+				
+						$zipURL = $upload_url  . 'smbundle_' . $this->fileName . '.zip';
+				
+						// Remove original files after zipping
+						foreach ($allfiles as $removefile) {
+							//unlink($removefile);
+						}
+				
+						$filename = $upload_dir  . 'smbundle_' . $this->fileName . '.zip';
+
+						$responseTojQuery = array(
+							'success' => true,
+							'new_offset' => $this->offset,
+							'limit' => $this->limit,
+							'total_row_count' => $this->totalRowCount,
+							'exported_file' => $fileURL ,
+							'zip_file' => $zipURL,
+							'exported_path' => $filename,
+							'export_type' => $this->exportType	
+						);
+						echo wp_json_encode($responseTojQuery);
+					wp_die();
+					}
+				//}
+				
 				if ($this->checkSplit == 'true' && !($this->offset) > ($this->totalRowCount))
 				{
 					$responseTojQuery = array(
