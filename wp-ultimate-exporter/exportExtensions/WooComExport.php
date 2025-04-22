@@ -14,12 +14,14 @@ if ( ! defined( 'ABSPATH' ) )
  * Class WooCommerceExport
  * @package Smackcoders\WCSV
  */
+// require_once dirname(__FILE__) . '/ExportExtension.php';
+
 
 require_once dirname(__FILE__) . '/ElementorExport.php';
 
+// use Smackcoders\SMEXP\ExportExtension;
 
 class WooCommerceExport extends ExportExtension{
-
 	protected static $instance = null,$mapping_instance,$export_handler,$export_instance,$post_export;
 	public $offset = 0;	
 	public $limit = 1000;	
@@ -2104,4 +2106,5 @@ class WooCommerceExport extends ExportExtension{
 }
 
 global $woocom_exp_class;
-$woocom_exp_class = WooCommerceExport::getInstance();
+//$woocom_exp_class = WooCommerceExport::getInstance();
+$woocom_exp_class = new WooCommerceExport();

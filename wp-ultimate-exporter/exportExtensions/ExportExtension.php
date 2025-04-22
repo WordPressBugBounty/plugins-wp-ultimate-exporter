@@ -14,6 +14,9 @@ if (file_exists($parent_autoload_path)) {
 }
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+// require_once dirname(__FILE__) . '/WPQueryExport.php';
+// require_once dirname(__FILE__) . '/WPQueryExport.php';
+
 if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 {
 
@@ -48,7 +51,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 		public $export_mode;
 		public $export_log = array();
 		public $limit;
-		protected static $instance = null, $mapping_instance, $metabox_export, $jet_reviews_export, $jet_book_export, $jetengine_export, $export_handler, $post_export, $woocom_export, $review_export, $ecom_export, $learnpress_export;
+		protected static $instance = null, $mapping_instance, $metabox_export, $jet_reviews_export, $jet_book_export, $jetengine_export, $export_handler, $post_export, $woocom_export, $review_export, $ecom_export, $learnpress_export,$wpquery_export;
 		protected $plugin, $activateCrm, $crmFunctionInstance;
 		public $plugisnScreenHookSuffix = null;
 		public $random_data = '';
@@ -67,6 +70,8 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				ExportExtension::$jet_book_export = JetBookingExport::getInstance();
 				ExportExtension::$jet_reviews_export = JetReviewsExport::getInstance();
 				ExportExtension::$metabox_export = metabox::getInstance();
+				// ExportExtension::$wpquery_export = WPQueryExport::getInstance();
+
 				self::$instance->doHooks();
 			}
 			return self::$instance;
@@ -83,6 +88,10 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks))
 			{
 				add_action('wp_ajax_parse_data', array(
+					$this,
+					'parseData'
+				));
+				add_action('wp_ajax_nopriv_parse_data', array(
 					$this,
 					'parseData'
 				));
@@ -415,10 +424,17 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 		public function parseData()
 		{
-			check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+			if (!is_user_logged_in() || !current_user_can('manage_options')) {
+				wp_send_json_error(['message' => 'Unauthorized access.'], 403);
+				return;
+			}
+	
+			// check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 			if (!empty($_POST))
 			{
-
+				$query_data = isset($_POST['query_data'])?sanitize_text_field($_POST['query_data']):'';
+        		$type = isset($_POST['type'])?sanitize_text_field($_POST['type']):'';
+					
 				$this->module = sanitize_text_field($_POST['module']);
 				$this->random_data = sanitize_text_field($_POST['random_data']);
 				//Whitelist of allowed export types
@@ -478,7 +494,22 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 				$this->export_mode = 'normal';
 				$this->checkSplit = isset($_POST['is_check_split']) ? sanitize_text_field($_POST['is_check_split']) : 'false';
-				$this->exportData();
+				if($type == 'post'){
+					ExportExtension::$wpquery_export = new WPQueryExport();
+					ExportExtension::$wpquery_export->exportwpquery($query_data);
+				}
+				elseif($type == 'user'){
+					ExportExtension::$wpquery_export = new WPQueryExport();
+					ExportExtension::$wpquery_export->exportwpquery_user($query_data);	
+				}
+				elseif($type == 'comment'){
+					ExportExtension::$wpquery_export = new WPQueryExport();
+					ExportExtension::$wpquery_export->exportwpquery_comment($query_data);		
+				}
+				else{
+					$this->exportData();
+				}
+			
 			}
 		}
 
@@ -1078,7 +1109,6 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			{
 				$default = $this->get_fields($module);
 			}
-
 			$headers = [];
 			foreach ($default as $key => $fields)
 			{
@@ -1979,11 +2009,10 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 		 */
 		public function proceedExport($data)
 		{
-
-			if (is_user_logged_in() && current_user_can('administrator'))
-			{
+//need this revert again
+			 if (is_user_logged_in() && current_user_can('administrator'))
+			 {
 				$upload_dir = ABSPATH . 'wp-content/uploads/smack_uci_uploads/exports/';
-
 				$index_php_file = $upload_dir . 'index.php';
 				
 				if (!file_exists($index_php_file)) {
@@ -2047,25 +2076,111 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 			if ($checkRun == 'yes')
 			{
+				$this->isPreview = $_POST['isPreview'];
 				if ($this->exportType == 'xml')
 				{
 					$xml_data = new \SimpleXMLElement('<?xml version="1.0"?><data></data>');
-					$this->array_to_xml($data, $xml_data);
-					$result = $xml_data->asXML($file);
+					
+
+				//	Check if preview is true
+					if ($this->isPreview === 'true' ) {		
+				
+						$limitedData = array_slice($data, 0, 10);
+						$this->array_to_xml($limitedData, $xml_data);	
+						$dom = new \DOMDocument('1.0', 'UTF-8');
+						$dom->preserveWhiteSpace = false;
+						$dom->formatOutput = true;
+						$dom->loadXML($xml_data->asXML());
+
+						echo $dom->saveXML();
+						wp_die();
+					}
+					else{
+						$this->array_to_xml($data, $xml_data);
+						$result = $xml_data->asXML($file);
+					}
 				}
 				elseif($this->exportType == 'tsv'){
 					$files = fopen($file, "w");
 					$headers = array_keys(reset($data)); // Get the keys from the first post
 					fputcsv($files, $headers, "\t"); 
+					
 					foreach ($data as $row) {
 						fputcsv($files, $row, "\t"); // Use tab as delimiter
+					}
+
+					if ($this->isPreview === 'true' ) {
+						$privewJson = array_slice($data, 0, 10);
+						$jsonData = json_encode($privewJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+				
+						$data = json_decode($jsonData, true);
+
+						// Get headers from the first item
+						$headers = array_keys($data[0]);
+
+						// Slice first 10 items (or less if not available)
+						$first10 = array_slice($data, 0, 10);
+
+						// Convert each item to a row of values
+						$rows = array_map(function($item) use ($headers) {
+							return array_map(fn($key) => $item[$key], $headers);
+						}, $first10);
+
+						// Final result: headers + first 10 rows
+						$result = array_merge([$headers], $rows);
+
+						// Preview as JSON
+						header('Content-Type: application/json');
+						echo json_encode($result, JSON_PRETTY_PRINT);
+						wp_die();
 					}
 					
 				}
 				else
 				{
-					if ($this->exportType == 'json') $csvData = json_encode($data);
-					else $csvData = $this->unParse($data, $this->headers);
+					if ($this->exportType == 'json')
+
+					{
+						$csvData = json_encode($data);
+	
+						if ($this->isPreview === 'true' ) {
+							
+							$privewJson = array_slice($data, 0, 10);
+							header('Content-Type: application/json; charset=utf-8');
+							echo json_encode($privewJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+							wp_die();
+	}
+						}
+					else {
+					$csvData = $this->unParse($data, $this->headers);
+				
+					// Check if migration is true
+					if ($this->isPreview === 'true' ) {
+						$privewJson = array_slice($data, 0, 10);
+						$jsonData = json_encode($privewJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+				
+						$data = json_decode($jsonData, true);
+
+						// Get headers from the first item
+						$headers = array_keys($data[0]);
+
+						// Slice first 10 items (or less if not available)
+						$first10 = array_slice($data, 0, 10);
+
+						// Convert each item to a row of values
+						$rows = array_map(function($item) use ($headers) {
+							return array_map(fn($key) => $item[$key], $headers);
+						}, $first10);
+
+						// Final result: headers + first 10 rows
+						$result = array_merge([$headers], $rows);
+
+						// Preview as JSON
+						header('Content-Type: application/json');
+						echo json_encode($result, JSON_PRETTY_PRINT);
+						wp_die();
+					}
+					}
 					try
 					{
 
@@ -2078,6 +2193,7 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 				}
 				}
+				
 				}
 
 				$this->offset = $this->offset + $this->limit;
@@ -2104,15 +2220,14 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				$filename = $upload_url . $this->fileName . '.' . 'zip';
 				}
 
-			//	if (($this->offset > $this->totalRowCount) && $this->checkSplit == 'true') {
 					// Define the export file (CSV or other type)
 					$file = $upload_dir . $this->fileName . '.' . $this->exportType;
 					$allfiles[] = $file;
-				//	$this->isMigration = true;
 				$this->isMigration = $_POST['isMigrate'];
 					// Check if migration is true
 					if ($this->isMigration === 'true' && (($this->offset) > ($this->totalRowCount))) {
 						
+						$module = $this->module;
 						// Create JSON file
 						$headers = self::generateHeaders($this->module, $this->optionalType);
 						if ($module == 'CustomPosts' || $module == 'Taxonomies' || $module == 'Categories' || $module == 'Tags')
@@ -2161,25 +2276,32 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 
 						$jsonFile = $upload_dir . $this->fileName . '.json';
 						
+						if($this->exportType == 'json'){
+							$jsonFile = $upload_dir . $this->fileName .'config'. '.json';
+						}
+						else{
+						    $jsonFile = $upload_dir . $this->fileName . '.json';
+						}
+
 						$postTypes = $this->getPostTypes();
-					//	print_r($postTypes);
-					$import_record_post = array_keys($postTypes);
-					if(is_plugin_active('woocommerce/woocommerce.php')){
-						$importas = [
-							'WooCommerce' => 'WooCommerce Product' ,
-						   //'WooCommerce Product Variations' , 'WooCommerceVariations',
-							'WooCommerceOrders' => 'WooCommerce Orders' ,
-							'WooCommerceCustomer' => 'WooCommerce Customer' , 
-							'WooCommerceReviews' => 'WooCommerce Reviews' ,
-							'WooCommerceCoupons' => 'WooCommerce Coupons' ,
-							'WooCommerceRefunds' => 'WooCommerce Refunds' ,
-					   ];
+					
+						$import_record_post = array_keys($postTypes);
+				// 	if(is_plugin_active('woocommerce/woocommerce.php')){
+				// 		$importas = [
+				// 			'WooCommerce' => 'WooCommerce Product' ,
+				// 		   //'WooCommerce Product Variations' , 'WooCommerceVariations',
+				// 			'WooCommerceOrders' => 'WooCommerce Orders' ,
+				// 			'WooCommerceCustomer' => 'WooCommerce Customer' , 
+				// 			'WooCommerceReviews' => 'WooCommerce Reviews' ,
+				// 			'WooCommerceCoupons' => 'WooCommerce Coupons' ,
+				// 			'WooCommerceRefunds' => 'WooCommerce Refunds' ,
+				// 	   ];
 						
-					   if (isset($importas[$this->module])) {		
-							$this->module = $importas[$this->module];
-					   }
+				// 	   if (isset($importas[$this->module])) {		
+				// 			$this->module = $importas[$this->module];
+				// 	   }
 						
-				}
+				// }
 					
 					
 					

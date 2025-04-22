@@ -14,8 +14,10 @@ if ( ! defined( 'ABSPATH' ) )
  * Class PostExport
  * @package Smackcoders\WCSV
  */	
-class PostExport extends ExportExtension{
+require_once dirname(__FILE__) . '/ExportExtension.php';
+use Smackcoders\SMEXP\ExportExtension;
 
+class PostExport extends ExportExtension{
 	protected static $instance = null,$mapping_instance,$export_handler,$export_instance,$jet_custom_table_export;
 	public $offset = 0;	
 	public $limit;

@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate Exporter
- * Version:     2.15
+ * Version:     2.16
  * Plugin URI:  https://www.smackcoders.com/ultimate-exporter.html
  * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, eCommerce, Custom Post and Custom field information along with default WordPress modules.
  * Author:      Smackcoders
@@ -38,8 +38,8 @@ namespace Smackcoders\SMEXP;
 if ( ! defined( 'ABSPATH' ) )
 	exit; // Exit if accessed directly
 
-define('IMPORTER_VERSION', '7.20');
-define('EXPORTER_VERSION', '2.15');
+define('IMPORTER_VERSION', '7.21');
+define('EXPORTER_VERSION', '2.16');
 require_once('Plugin.php');
 require_once('SmackExporterInstall.php');
 require_once('exportExtensions/ExportExtension.php');
@@ -63,6 +63,11 @@ if (is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php')) {
 	
 	$request_page = isset($_REQUEST['page']) ? $_REQUEST['page'] : '';
 	$request_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+	require_once('exportExtensions/ExportExtension.php');
+
+	require_once('exportExtensions/WPQueryExport.php');
+	require_once('exportExtensions/WooComExport.php');
+
 	if (in_array($request_page, $plugin_pages) || in_array($request_action, $plugin_ajax_hooks)) {
 		require_once('exportExtensions/JetEngine.php');
 		require_once('exportExtensions/LearnPress.php');
@@ -71,6 +76,7 @@ if (is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php')) {
 		require_once('exportExtensions/CustomerReviewsExport.php');
 		require_once('exportExtensions/PostExport.php');
 		require_once('exportExtensions/WooComExport.php');
+		require_once('exportExtensions/WPQueryExport.php');
 
 	}
 }

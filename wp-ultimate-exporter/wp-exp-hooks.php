@@ -22,5 +22,6 @@ $plugin_ajax_hooks = [
     'get_download',
     'upgrade_notices_csv_bro',
     'get_plugin_notice',
-    'dismiss_notice'
+    'dismiss_notice',
+    'wpquery_data'
 ];

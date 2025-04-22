@@ -35,7 +35,6 @@ class LearnPressExport extends ExportExtension{
 	public function getCourseData($id)
 	{
 		global $wpdb;
-
 		$get_section_details = $wpdb->get_results("SELECT section_id, section_name, section_description FROM {$wpdb->prefix}learnpress_sections WHERE section_course_id = $id ", ARRAY_A);
 		$section_names = '';
 		$section_descriptions = '';

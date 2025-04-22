@@ -1,12 +1,12 @@
-﻿﻿=== Export All Posts, Products, Orders, Refunds & Users ===
+﻿=== Export All Posts, Products, Orders, Refunds & Users ===
 Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type
 Requires at least: 5.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 2.15
-Version: 2.15
+Stable tag: 2.16
+Version: 2.16
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -123,15 +123,13 @@ If you find WP Ultimate Exporter helpful, please **[rate us](https://wordpress.o
 
 3. Export data uploaded within a specific period.
 
-4. Perform Status-based CSV export.
+4. Export files published by a particular author.
 
-5. Export files published by a particular author.
+5. Select and export specific fields of any Post type.
 
-6. Select and export specific fields of any Post type.
+6. Migrate Option Configuration in Export Settings
 
-7. Migrate Option Configuration in Export Settings
-
-8. Export Bundle Download Page
+7. Export Bundle Download Page
 
 == Frequently Asked Questions ==
 
@@ -396,6 +394,11 @@ In the case of WooCommerce customers below listed user meta is exported:
 * Select the 'Comments' module in the export tab to export comments. Provide filename, and file type, choose filters, and click export.
 
 == Changelog ==
+
+= 2.16 = 
+* New Feature : WP_Query Results - Export content dynamically using WP_Query to fetch post/users/comments 
+* New Feature : Preview option for first 10 records - Enables users to preview the first 10 query results without full output.
+* Added :bmp images export - Allows exporting BMP format images in the media library.
 
 = 2.15 =
 
