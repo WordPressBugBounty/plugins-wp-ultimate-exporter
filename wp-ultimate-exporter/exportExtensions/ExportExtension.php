@@ -473,7 +473,13 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				}
 				else
 				{
-					$this->limit = 50;
+				if(!empty($conditions['specific_iteration_id']['is_check']) && $conditions['specific_iteration_id']['is_check'] == 'true') {
+						$this->limit = !empty($conditions['specific_iteration_id']['iteration_id']) ? $conditions['specific_iteration_id']['iteration_id'] : '';
+					}
+					else{
+						$this->limit           = 50;
+					}
+
 				}
 				if (!empty($this->conditions['delimiter']['optional_delimiter']))
 				{

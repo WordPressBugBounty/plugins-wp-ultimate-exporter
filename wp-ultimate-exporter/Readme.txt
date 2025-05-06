@@ -3,10 +3,10 @@ Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type
 Requires at least: 5.0
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.16
-Version: 2.16
+Stable tag: 2.16.1	
+Version: 2.16.1
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -33,6 +33,8 @@ With this plugin, you can export all your WordPress content—including posts, p
 - **Post Status Filtering** – Export data based on post status (Published, Draft, Pending, etc.).
 - **Author-Specific Export** – Extract content created by specific authors.
 - **Quick Migration Zip Export** -  Export any post type as a bundled ZIP with default template info for easy migration using the One-Click Import option in the Importer.
+- **Query-Based Export** – Use post type query, user query, and comment query to export exactly the data you need.
+- **Iteration-Based Export** – Export large volumes of data in smaller batches to prevent timeouts and improve stability.
 
 Unlock advanced filtering options and seamless Google Sheets export with **[Ultimate Exporter Pro](https://www.smackcoders.com/wp-ultimate-exporter.html?utm_source=wordpress&utm_medium=readme&utm_campaign=free_exporter).**
 
@@ -88,7 +90,7 @@ For more details on this migration feature, refer to our documentation on [How t
 
 Upgrade to **[Ultimate Exporter Pro](https://www.smackcoders.com/wp-ultimate-exporter.html?utm_source=wordpress&utm_medium=readme&utm_campaign=free_exporter)** for premium features:
 - **Scheduled & Automated Exports** – Set up recurring exports with ease.
-- **Advanced Filtering by Category, Post IDs, and Custom Fields**
+- **Advanced Filtering by Category, Status, Column Selection, Post IDs, Title, and Custom Fields**
 - **Google Sheets Integration** – Export data directly to Google Sheets for real-time access.
 - **Support for ACF, Toolset Types, JetEngine, and Meta Box Fields**
 
@@ -117,19 +119,21 @@ If you find WP Ultimate Exporter helpful, please **[rate us](https://wordpress.o
 
 == Screenshots ==
 
-1. Module selection view in the Exporter Plugin.
+1. Select module to export page.
 
-2. Export data with specific delimiters.
+2. Export Data with WP Query
 
-3. Export data uploaded within a specific period.
+3. Export Advanced Settings page.
 
-4. Export files published by a particular author.
+4. Export data uploaded within a specific period.
 
-5. Select and export specific fields of any Post type.
+5. Export files published by a particular author.
 
-6. Migrate Option Configuration in Export Settings
+6. Export settings with migration and preview options.
 
-7. Export Bundle Download Page
+7. Export based on iteration.
+
+8. Export Download Page
 
 == Frequently Asked Questions ==
 
@@ -393,12 +397,33 @@ In the case of WooCommerce customers below listed user meta is exported:
 
 * Select the 'Comments' module in the export tab to export comments. Provide filename, and file type, choose filters, and click export.
 
+= 17. Can I preview the data before exporting it? =
+
+Yes! The new Preview option shows the first 10 records from your choosen post type. The preview button is accessible at the end of the Export settings page, you can use it after applying necessary filters and other settings. This helps you verify the output before generating the full file — saving time and avoiding mistakes.
+
+= 18. What is Query-Based Export and how do i use it? =
+
+Query-Based Export is a developer-focused export feature that lets you export exactly the data you need by writing custom queries. Instead of exporting all content or relying on filters, you can target specific posts, users, or comments using advanced criteria like post type, meta fields, date range, categories, and more. Just go to Export tab and choose WP Query. Enter your query arguments in JSON-like format, preview the results, and click Export. It’s flexible, powerful, and doesn’t require writing PHP.
+
+= 19. How does iteration-based export work? =
+
+Iteration-based export breaks down large data exports into smaller, manageable batches. Instead of processing all records at once, the plugin exports them in multiple iterations—reducing server load, avoiding timeouts, and ensuring smoother, more reliable exports for large datasets.
+
 == Changelog ==
 
-= 2.16 = 
-* New Feature : WP_Query Results - Export content dynamically using WP_Query to fetch post/users/comments 
-* New Feature : Preview option for first 10 records - Enables users to preview the first 10 query results without full output.
-* Added :bmp images export - Allows exporting BMP format images in the media library.
+= 2.16.1 =
+
+* Added: Iteration-based export support for handling large datasets
+* Updated: Compatibility check with the latest version of WordPress
+
+= 2.16 =
+
+* Added: WP_Query Export – Export dynamic content using WP_Query for posts, users, and comments.
+* Added: Preview Option – View the first 10 records before running a full export.
+* Added: BMP Image Format Support – Export BMP images attached to any post.
+* Added: Font Face & Font Family Export – Export complete font groups, including styles and weights.
+* Added: Global Styles Support – Export site-wide design settings like color palettes and typography.
+* Added: Full Templates Export – Export complete layouts, including full-page designs and templates.
 
 = 2.15 =
 
@@ -818,6 +843,6 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.15 =
+= 2.16.1 =
 
-Upgrade now to unlock the new export functionality with the Migrate option.
+This version introduces iteration-based export to ensure smooth handling of large datasets without timeouts or memory issues. We recommend updating to take full advantage of improved performance and compatibility with the latest WordPress version.
