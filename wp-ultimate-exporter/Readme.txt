@@ -1,12 +1,12 @@
-﻿=== Export All Posts, Products, Orders, Refunds & Users ===
+﻿﻿=== Export All Posts, Products, Orders, Refunds & Users ===
 Contributors: smackcoders
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type
 Requires at least: 5.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.16.1	
-Version: 2.16.1
+Stable tag: 2.16.2	
+Version: 2.16.2
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -410,6 +410,11 @@ Query-Based Export is a developer-focused export feature that lets you export ex
 Iteration-based export breaks down large data exports into smaller, manageable batches. Instead of processing all records at once, the plugin exports them in multiple iterations—reducing server load, avoiding timeouts, and ensuring smoother, more reliable exports for large datasets.
 
 == Changelog ==
+
+= 2.16.2 =
+
+* Added: Export support for ACF WYSIWYG editor field
+* Fixed: Product category export related issue
 
 = 2.16.1 =
 
@@ -843,6 +848,6 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.16.1 =
+= 2.16.2 =
 
-This version introduces iteration-based export to ensure smooth handling of large datasets without timeouts or memory issues. We recommend updating to take full advantage of improved performance and compatibility with the latest WordPress version.
+Upgrade now to export ACF WYSIWYG editor field and fix product category issues.
