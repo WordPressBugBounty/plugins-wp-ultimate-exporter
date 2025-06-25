@@ -1,12 +1,12 @@
-﻿﻿=== Export All Posts, Products, Orders, Refunds & Users ===
-Contributors: smackcoders
+﻿=== Export All Posts, Products, Orders, Refunds & Users ===
+Contributors: smackcoders, riswanasmack, premairuthayarajan
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type
 Requires at least: 5.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.16.2	
-Version: 2.16.2
+Stable tag: 2.17
+Version: 2.17
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -20,6 +20,13 @@ Looking for a reliable way to back up, migrate, or store your WordPress content?
 
 **Important Note:** WP Ultimate Exporter is an add-on that requires the **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** to function.
 With this plugin, you can export all your WordPress content—including posts, pages, custom fields, users, and WooCommerce data—ensuring secure backups and effortless migrations.
+
+** What's new in version 2.17? **
+
+If you are an ACF user, this One’s for You!
+
+You can now export advanced ACF fields like Date Picker, Datetime Picker, Icon Picker, Color Picker, and Time Picker with complete compatibility. Try and let us know your feedback!
+
 
 **Top Features & Benefits**
 
@@ -410,6 +417,10 @@ Query-Based Export is a developer-focused export feature that lets you export ex
 Iteration-based export breaks down large data exports into smaller, manageable batches. Instead of processing all records at once, the plugin exports them in multiple iterations—reducing server load, avoiding timeouts, and ensuring smoother, more reliable exports for large datasets.
 
 == Changelog ==
+
+= 2.17 =
+
+* Added: Support for Exporting ACF Advanced fields like Date picker, Datetime picker, Icon picker, Color picker, and Time picker.
 
 = 2.16.2 =
 
@@ -848,6 +859,7 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.16.2 =
+= 2.17 =
 
-Upgrade now to export ACF WYSIWYG editor field and fix product category issues.
+Upgrade now to export ACF advanced fields like date picker, time, datetime, etc., introduced in this new release.
+
