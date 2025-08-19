@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate Exporter
- * Version:     2.17
+ * Version:     2.17.1
  * Plugin URI:  https://www.smackcoders.com/ultimate-exporter.html
  * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, eCommerce, Custom Post and Custom field information along with default WordPress modules.
  * Author:      Smackcoders
@@ -39,14 +39,20 @@ if ( ! defined( 'ABSPATH' ) )
 	exit; // Exit if accessed directly
 
 define('IMPORTER_VERSION', '7.22');
-define('EXPORTER_VERSION', '2.17');
+define('EXPORTER_VERSION', '2.17.1');
 require_once('Plugin.php');
 require_once('SmackExporterInstall.php');
 require_once('exportExtensions/ExportExtension.php');
 require_once('exportExtensions/JetBookingExport.php');
 require_once('exportExtensions/JetReviewsExport.php');
 require_once('exportExtensions/JetCustomTableExport.php');
-	
+
+
+if (
+    is_plugin_active('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php') &&
+    class_exists('Smackcoders\SMEXP\ExportExtension')
+) {
+
 if ( ! function_exists( 'is_plugin_active' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
 }
@@ -201,6 +207,15 @@ function onpluginsload(){
 	// 	}
 	// }	
 }
+} else {
+
+    if (is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php')) {
+        deactivate_plugins('wp-ultimate-exporter/wp-ultimate-exporter.php');
+
+	add_action( 'admin_notices', 'Smackcoders\\SMEXP\\Notice_msg_exporter_Deactivate' );
+
+    }
+}
 
 function Notice_msg_exporter_free() {
 	
@@ -210,4 +225,16 @@ function Notice_msg_exporter_free() {
 				</div>
 <?php 
 	
-}?>
+}
+
+function Notice_msg_exporter_Deactivate() {
+?>
+				<div class="notice notice-warning is-dismissible" >
+				<p> WP Ultimate Exporter is an addon of <a href="https://wordpress.org/plugins/wp-ultimate-csv-importer" target="blank" style="cursor: pointer;text-decoration:none">WP Ultimate CSV Importer</a> plugin, kindly install it to continue using import woocommerce. </p>
+			</div>
+<?php 
+	
+}
+
+
+?>

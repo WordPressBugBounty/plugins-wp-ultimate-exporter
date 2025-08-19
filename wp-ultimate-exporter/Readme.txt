@@ -5,8 +5,8 @@ Tags: export, wordpress csv export, export woocommerce products, export orders, 
 Requires at least: 5.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.17
-Version: 2.17
+Stable tag: 2.17.1
+Version: 2.17.1
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -20,13 +20,6 @@ Looking for a reliable way to back up, migrate, or store your WordPress content?
 
 **Important Note:** WP Ultimate Exporter is an add-on that requires the **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** to function.
 With this plugin, you can export all your WordPress content—including posts, pages, custom fields, users, and WooCommerce data—ensuring secure backups and effortless migrations.
-
-** What's new in version 2.17? **
-
-If you are an ACF user, this One’s for You!
-
-You can now export advanced ACF fields like Date Picker, Datetime Picker, Icon Picker, Color Picker, and Time Picker with complete compatibility. Try and let us know your feedback!
-
 
 **Top Features & Benefits**
 
@@ -417,6 +410,10 @@ Query-Based Export is a developer-focused export feature that lets you export ex
 Iteration-based export breaks down large data exports into smaller, manageable batches. Instead of processing all records at once, the plugin exports them in multiple iterations—reducing server load, avoiding timeouts, and ensuring smoother, more reliable exports for large datasets.
 
 == Changelog ==
+
+= 2.17.1 =
+
+* Added: Minor bug fix - deactivation issue 
 
 = 2.17 =
 
