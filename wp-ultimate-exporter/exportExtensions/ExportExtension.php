@@ -429,7 +429,8 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 				return;
 			}
 	
-			// check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+			check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
+			
 			if (!empty($_POST))
 			{
 				$query_data = isset($_POST['query_data'])?sanitize_text_field($_POST['query_data']):'';
@@ -1107,6 +1108,9 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 			{
 				if(is_plugin_active('events-manager/events-manager.php') &&$optionalType == 'event'){
 					$optionalType = 'Events';
+				}
+				elseif (is_plugin_active('the-events-calendar/the-events-calendar.php') && $optionalType == 'tribe_events') {
+					$optionalType = 'tribe_events';		
 				}
 				$default = $this->get_fields($optionalType); // Call the super class function
 
@@ -2934,6 +2938,72 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension'))
 								{
 									$rowValue[$key] = $this->returnMetaValueAsCustomerInput($rowValue['wpcr3_' . $key], $hKey);
 								}
+								else if (is_plugin_active('slim-seo/slim-seo.php')) {
+
+    $slimseo_keys = ['title','description','canonical','noindex','nofollow','redirect','facebook_image','twitter_image'];
+
+    if (in_array($key, $slimseo_keys)) {
+
+        $slim_seo_meta = get_post_meta($recordId, 'slim_seo', true);
+
+        if (empty($slim_seo_meta)) {
+            $rowValue[$key] = '';
+        } else {
+            if (is_serialized($slim_seo_meta)) {
+                $slim_seo_meta = maybe_unserialize($slim_seo_meta);
+            }
+
+            if (in_array($key, ['facebook_image','twitter_image']) && is_array($slim_seo_meta[$key])) {
+                $rowValue[$key] = isset($slim_seo_meta[$key]['url']) ? $slim_seo_meta[$key]['url'] : '';
+            } else {
+                $rowValue[$key] = isset($slim_seo_meta[$key]) ? $slim_seo_meta[$key] : '';
+            }
+
+        }
+
+        $result[$recordId][$key] = $rowValue[$key];
+        continue;
+    }
+}else if (is_plugin_active('listeo-core/listeo-core.php')) {
+
+    $listeo_keys = [
+        'listeo_core_avatar_id',
+        'listeo_verified_user',
+        'phone',
+        'twitter',
+        'facebook',
+        'linkedin',
+        'instagram',
+        'youtube',
+        'skype',
+        'whatsapp',
+        'stripe_user_id'
+    ];
+
+    if (in_array($key, $listeo_keys)) {
+
+        $meta_value = get_user_meta($recordId, $key, true);
+
+        if ($key === 'listeo_core_avatar_id') {
+            if (!empty($meta_value) && is_numeric($meta_value)) {
+                $rowValue[$key] = wp_get_attachment_url($meta_value);
+            } else {
+                $rowValue[$key] = '';
+            }
+
+        } elseif ($key === 'listeo_verified_user') {
+            $rowValue[$key] = $meta_value ?: '';
+
+        } else {
+            $rowValue[$key] = $meta_value ?: '';
+        }
+
+        $result[$recordId][$key] = $rowValue[$key];
+        continue;
+    }
+}
+
+
 								else
 								{
 									if (isset($rowValue['_yoast_wpseo_' . $key]))

@@ -1,12 +1,12 @@
-﻿=== Export All Posts, Products, Orders, Refunds & Users ===
+=== Export All Posts, Products, Orders, Refunds & Users ===
 Contributors: smackcoders, riswanasmack, premairuthayarajan
 Donate link: https://www.paypal.me/smackcoders
-Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type
+Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type, easy digital downloads export
 Requires at least: 5.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.17.1
-Version: 2.17.1
+Stable tag: 2.22
+Version: 2.22
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -20,6 +20,10 @@ Looking for a reliable way to back up, migrate, or store your WordPress content?
 
 **Important Note:** WP Ultimate Exporter is an add-on that requires the **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** to function.
 With this plugin, you can export all your WordPress content—including posts, pages, custom fields, users, and WooCommerce data—ensuring secure backups and effortless migrations.
+
+= What’s New in WP Ultimate Exporter 2.22 =
+
+WP Ultimate Exporter now supports **exporting Easy Digital Downloads data**. You can export Downloads (digital products), Customers, and Discounts using CSV, Excel, XML, and other supported file formats. This update helps simplify EDD data backups, reporting, and migrations by allowing structured exports of key store data.
 
 **Top Features & Benefits**
 
@@ -225,7 +229,7 @@ Yes, you can export all Custom Posts listed in the drop-down.
 
 No, there is no limitation on the number of records you can export. 
 
-= 8. What is export_wp and how Can I use it? =
+= 8. What is export_wp and how can I use it? =
 
 export_wp is a function for WordPress that generates the WXR export file for download. By default, this function can export all the content for post types with the can_export argument enabled and skip posts with ‘auto-draft’ status. 
 
@@ -409,7 +413,30 @@ Query-Based Export is a developer-focused export feature that lets you export ex
 
 Iteration-based export breaks down large data exports into smaller, manageable batches. Instead of processing all records at once, the plugin exports them in multiple iterations—reducing server load, avoiding timeouts, and ensuring smoother, more reliable exports for large datasets.
 
+= 20. Can I export Easy Digital Downloads data using WP Ultimate CSV Importer? =
+
+Yes. You can export Easy Digital Downloads data, including Downloads, Customers, and Discounts. Go to the Export tab, choose Custom Posts, select the required EDD module (EDD Downloads/EDD Customers/EDD Discount), set the file name and format, and click Export.
+
+
 == Changelog ==
+
+= 2.22 =
+* Added: Export support for Easy Digital Downloads Downloads, Customers, and Discounts.
+
+= 2.21 = 
+* Added: Compatibility with WordPress 6.9.
+* Added: Support for the Listeo theme, including import of profile meta fields such as phone, address, social links, and more.
+
+= 2.20 =
+* Fixed: CSRF vulnerability in the parseData() export handler.
+
+= 2.19 =
+* Added: Export support for Events Calendar plugin
+
+= 2.18 =
+
+* Added: Support for Slim SEO plugin data export
+* Fixed: Minor bugs
 
 = 2.17.1 =
 
@@ -856,7 +883,10 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.17 =
+= 2.22 =
 
-Upgrade now to export ACF advanced fields like date picker, time, datetime, etc., introduced in this new release.
+This update adds Easy Digital Downloads export support, allowing you to export Downloads, Customers, and Discounts.
+
+
+
 
