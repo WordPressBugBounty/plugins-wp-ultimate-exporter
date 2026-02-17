@@ -1,16 +1,16 @@
 === Export All Posts, Products, Orders, Refunds & Users ===
-Contributors: smackcoders, riswanasmack, premairuthayarajan
+Contributors: smackcoders, premairuthayarajan
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type, easy digital downloads export
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.22
-Version: 2.22
+Stable tag: 2.23
+Version: 2.23
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
-Export your WordPress and WooCommerce website data seamlessly with our powerful export plugin. Save records as CSV or XML files for secure backup, smooth migration, and efficient data management.
+Export any WordPress website including WooCommerce data seamlessly with our powerful export plugin. Save records as CSV, XML, or Excel file for secure backup, smooth migration, and efficient data management.
 
 == Description ==
 
@@ -21,9 +21,9 @@ Looking for a reliable way to back up, migrate, or store your WordPress content?
 **Important Note:** WP Ultimate Exporter is an add-on that requires the **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** to function.
 With this plugin, you can export all your WordPress content—including posts, pages, custom fields, users, and WooCommerce data—ensuring secure backups and effortless migrations.
 
-= What’s New in WP Ultimate Exporter 2.22 =
+= What’s New in WP Ultimate Exporter 2.23 =
 
-WP Ultimate Exporter now supports **exporting Easy Digital Downloads data**. You can export Downloads (digital products), Customers, and Discounts using CSV, Excel, XML, and other supported file formats. This update helps simplify EDD data backups, reporting, and migrations by allowing structured exports of key store data.
+Version 2.23 introduces SureCart export support in WP Ultimate Exporter. SureCart users can now export Products, Coupons, and Customers directly to CSV, XML, Excel, or other supported files from within WordPress. This makes it easier for store owners or managers to move data between sites, maintain backups, or work with bulk edits whenever needed.
 
 **Top Features & Benefits**
 
@@ -419,6 +419,9 @@ Yes. You can export Easy Digital Downloads data, including Downloads, Customers,
 
 
 == Changelog ==
+
+= 2.23 =
+* Added: SureCart export support for Products, Coupons, and Customers.
 
 = 2.22 =
 * Added: Export support for Easy Digital Downloads Downloads, Customers, and Discounts.
@@ -883,9 +886,14 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.22 =
+= 2.23 =
 
-This update adds Easy Digital Downloads export support, allowing you to export Downloads, Customers, and Discounts.
+This update adds SureCart export support. You can now export SureCart Products, Coupons, and Customers using CSV, Excel, or XML files directly from WordPress.
+
+
+
+
+
 
 
 

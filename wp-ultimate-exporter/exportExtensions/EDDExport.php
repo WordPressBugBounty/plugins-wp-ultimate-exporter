@@ -12,7 +12,7 @@ namespace Smackcoders\SMEXP;
 if (!defined('ABSPATH'))
 	exit; // Exit if accessed directly
 
-/**
+/** 
  * Class EDDExport
  * Handles all Easy Digital Downloads export functionality
  * @package Smackcoders\WCSV
