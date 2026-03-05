@@ -375,6 +375,33 @@ class PostExport extends ExportExtension
 				return $products_ids;
 			}
 		} elseif ($module == 'shop_order' && is_plugin_active('woocommerce/woocommerce.php')) {
+
+			if (!empty($conditions['specific_period']['is_check'])) {
+				$args = [
+					'return'  => 'ids',
+					'limit'   => $limit,
+					'offset'  => $offset,
+					'orderby' => 'date',
+					'order'   => 'DESC',
+				];
+
+				if (!empty($conditions['specific_period']['is_check']) &&!empty($conditions['specific_period']['from']) &&!empty($conditions['specific_period']['to'])) {
+					$args['date_query'] = [[
+						'after'     => $conditions['specific_period']['from'],
+						'before'    => $conditions['specific_period']['to'],
+						'inclusive' => true,
+					]];
+				}
+
+				$order_ids = wc_get_orders($args);
+				$count_args = $args;
+				$count_args['limit']  = -1;
+				$count_args['offset'] = 0;
+
+				self::$export_instance->totalRowCount = count(wc_get_orders($count_args));
+
+				return $order_ids;
+			}
 			if ($sitepress == null && !is_plugin_active('polylang/polylang.php') && !is_plugin_active('polylang-pro/polylang.php') && !is_plugin_active('polylang-wc/polylang-wc.php') && !is_plugin_active('woocommerce-multilingual/wpml-woocommerce.php')) {
 				if (!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') { //Specific period ONLY TRUE
 					if ($conditions['specific_period']['from'] == $conditions['specific_period']['to']) {

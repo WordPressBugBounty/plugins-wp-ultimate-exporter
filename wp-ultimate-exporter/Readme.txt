@@ -5,8 +5,8 @@ Tags: export, wordpress csv export, export woocommerce products, export orders, 
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.23
-Version: 2.23
+Stable tag: 2.23.1
+Version: 2.23.1
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -20,10 +20,6 @@ Looking for a reliable way to back up, migrate, or store your WordPress content?
 
 **Important Note:** WP Ultimate Exporter is an add-on that requires the **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** to function.
 With this plugin, you can export all your WordPress content—including posts, pages, custom fields, users, and WooCommerce data—ensuring secure backups and effortless migrations.
-
-= What’s New in WP Ultimate Exporter 2.23 =
-
-Version 2.23 introduces SureCart export support in WP Ultimate Exporter. SureCart users can now export Products, Coupons, and Customers directly to CSV, XML, Excel, or other supported files from within WordPress. This makes it easier for store owners or managers to move data between sites, maintain backups, or work with bulk edits whenever needed.
 
 **Top Features & Benefits**
 
@@ -419,6 +415,9 @@ Yes. You can export Easy Digital Downloads data, including Downloads, Customers,
 
 
 == Changelog ==
+
+= 2.23.1 =
+* Added: Compatibility with WooCommerce High-Performance Order Storage (HPOS) to ensure the plugin works correctly when HPOS is enabled.
 
 = 2.23 =
 * Added: SureCart export support for Products, Coupons, and Customers.
@@ -886,12 +885,9 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.23 =
+= 2.23.1 =
 
-This update adds SureCart export support. You can now export SureCart Products, Coupons, and Customers using CSV, Excel, or XML files directly from WordPress.
-
-
-
+Upgrade to version 2.23.1 to ensure compatibility with WooCommerce High-Performance Order Storage (HPOS).
 
 
 

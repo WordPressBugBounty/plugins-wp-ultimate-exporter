@@ -407,34 +407,17 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension')) {
 				return $total;
 
 			} elseif ($module == 'shop_order') {
-				if (is_plugin_active('polylang/polylang.php') || is_plugin_active('polylang-pro/polylang.php') || is_plugin_active('polylang-wc/polylang-wc.php')) {
-					$order_statuses = array('wc-completed', 'wc-cancelled', 'wc-on-hold', 'wc-processing', 'wc-pending');
-					$orders_id = wc_get_orders(array('status' => $order_statuses, 'limit' => -1));
-					$get_post_ids = array();
-					foreach ($orders_id as $my_orders) {
-						$get_post_ids[] = $my_orders->get_id();
-					}
-					foreach ($get_post_ids as $ids) {
-						$module = $wpdb->get_var("SELECT post_type FROM {$wpdb->prefix}posts where id=$ids");
-					}
-					if ($module == 'shop_order_placehold') {
-						$orders = "select DISTINCT p.ID from {$wpdb->prefix}posts as p inner join {$wpdb->prefix}wc_orders as wc ON p.ID=wc.id";
-						$orders .= " where p.post_type = '$module'";
-						$orders .= "and wc.status in ('wc-completed', 'wc-cancelled', 'wc-on-hold', 'wc-processing', 'wc-pending')";
-						$orders = $wpdb->get_col($orders);
-					} else {
-						$orders = "select DISTINCT ID from {$wpdb->prefix}posts";
-						$orders .= " where post_type = '$module'";
-						$orders .= "and post_status in ('wc-completed','wc-cancelled','wc-on-hold','wc-processing','wc-pending')";
-						$orders = $wpdb->get_col($orders);
-					}
-
-				} else {
-					$order_statuses = array('wc-completed', 'wc-cancelled', 'wc-on-hold', 'wc-processing', 'wc-pending');
-					$orders = wc_get_orders(array('status' => $order_statuses, 'limit' => -1));
-				}
-				$total = count($orders);
-				return $total;
+				$order_statuses = array('wc-completed','wc-cancelled','wc-on-hold','wc-processing','wc-pending','wc-refunded','wc-failed','wc-checkout-draft');
+				$args = [
+						'return'  => 'ids',
+						'limit'  => -1,
+						'status'  => $order_statuses
+					];
+				$orders = wc_get_orders($args);
+				$response = count($orders);
+				update_option('woocommerce_order_count', $response);
+				echo wp_json_encode($response);
+				wp_die();
 
 			} elseif ($module == 'product_variation') {
 				if (is_plugin_active('polylang/polylang.php') || is_plugin_active('polylang-pro/polylang.php') || is_plugin_active('polylang-wc/polylang-wc.php')) {
