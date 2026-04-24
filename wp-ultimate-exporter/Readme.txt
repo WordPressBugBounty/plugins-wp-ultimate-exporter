@@ -3,10 +3,10 @@ Contributors: smackcoders, premairuthayarajan
 Donate link: https://www.paypal.me/smackcoders
 Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type, easy digital downloads export
 Requires at least: 5.0
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.23.1
-Version: 2.23.1
+Stable tag: 2.24
+Version: 2.24
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -415,6 +415,9 @@ Yes. You can export Easy Digital Downloads data, including Downloads, Customers,
 
 
 == Changelog ==
+
+= 2.24 =
+* Added: wordpress 7.0 compatibility
 
 = 2.23.1 =
 * Added: Compatibility with WooCommerce High-Performance Order Storage (HPOS) to ensure the plugin works correctly when HPOS is enabled.
