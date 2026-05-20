@@ -5,8 +5,8 @@ Tags: export, wordpress csv export, export woocommerce products, export orders, 
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.24
-Version: 2.24
+Stable tag: 2.24.1
+Version: 2.24.1
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -415,6 +415,10 @@ Yes. You can export Easy Digital Downloads data, including Downloads, Customers,
 
 
 == Changelog ==
+= 2.24.1 =
+* Fixed total count mismatch issue for Custom Post Type (CPT) exports.
+* Fixed issue where Custom Post Type exports generated empty rows in CSV files.
+* Fixed exporter activation conflict when CSV Importer (Free/Pro) plugin is active
 
 = 2.24 =
 * Added: wordpress 7.0 compatibility

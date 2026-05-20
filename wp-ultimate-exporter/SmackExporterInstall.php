@@ -49,7 +49,10 @@ class ExpInstall {
 	public static function plugin_row_meta( $links, $file ) {		
 		
 		$active_plugins = get_option('active_plugins');
-		if(in_array('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php', $active_plugins)){
+		if (
+			in_array('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php', $active_plugins, true) ||
+			in_array('wp-ultimate-csv-importer-pro/wp-ultimate-csv-importer-pro.php', $active_plugins, true)
+		) {
 			return $links;
 		}
 		else{

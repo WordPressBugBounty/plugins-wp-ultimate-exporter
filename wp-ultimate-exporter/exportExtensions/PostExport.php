@@ -221,7 +221,7 @@ class PostExport extends ExportExtension
 		 elseif ($module == 'WPeCommerceCoupons') {
 			$module = 'wpsc-coupon';
 		} else {
-			$module = self::import_post_types($module);
+			$module = self::import_post_types($module, $optionalType);
 		}
 
 		$get_post_ids = "select DISTINCT ID from {$wpdb->prefix}posts";

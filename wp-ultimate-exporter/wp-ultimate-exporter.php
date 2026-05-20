@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate Exporter
- * Version:     2.24
+ * Version:     2.24.1
  * Plugin URI:  https://www.smackcoders.com/ultimate-exporter.html
  * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, eCommerce, Custom Post and Custom field information along with default WordPress modules.
  * Author:      Smackcoders
@@ -38,8 +38,19 @@ namespace Smackcoders\SMEXP;
 if (!defined('ABSPATH'))
 	exit; // Exit if accessed directly
 
-define('IMPORTER_VERSION', '7.39');
-define('EXPORTER_VERSION', '2.24');
+define('IMPORTER_VERSION', '7.41');
+define('EXPORTER_VERSION', '2.24.1');
+
+if (!function_exists('is_plugin_active')) {
+	require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+
+function smexp_is_parent_importer_active()
+{
+	return is_plugin_active('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php')
+		|| is_plugin_active('wp-ultimate-csv-importer-pro/wp-ultimate-csv-importer-pro.php');
+}
+
 require_once('Plugin.php');
 require_once('SmackExporterInstall.php');
 require_once('exportExtensions/ExportExtension.php');
@@ -50,13 +61,9 @@ require_once('exportExtensions/EDDExport.php');
 
 
 if (
-	is_plugin_active('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php') &&
+	smexp_is_parent_importer_active() &&
 	class_exists('Smackcoders\SMEXP\ExportExtension')
 ) {
-
-	if (!function_exists('is_plugin_active')) {
-		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-	}
 	$upload = wp_upload_dir();
 	$exports_dir = $upload['basedir'] . '/smack_uci_uploads/exports/';
 	$htaccess_file = $exports_dir . '.htaccess';

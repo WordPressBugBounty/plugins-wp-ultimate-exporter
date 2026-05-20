@@ -18,9 +18,42 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 // require_once dirname(__FILE__) . '/WPQueryExport.php';
 // require_once dirname(__FILE__) . '/WPQueryExport.php';
 
-if (class_exists('\Smackcoders\FCSV\MappingExtension')) {
+$mapping_extension_candidates = array(
+	'\Smackcoders\UCI\Core\MappingExtension',
+	'\Smackcoders\WCSV\MappingExtension',
+	'\Smackcoders\FCSV\MappingExtension',
+);
+$parent_mapping_loaded = false;
+foreach ($mapping_extension_candidates as $mapping_class) {
+	if (class_exists($mapping_class)) {
+		$parent_mapping_loaded = true;
+		break;
+	}
+}
+if (!$parent_mapping_loaded) {
+	$mapping_paths = array(
+		WP_PLUGIN_DIR . '/wp-ultimate-csv-importer/extensionModules/MappingExtension.php',
+		WP_PLUGIN_DIR . '/wp-ultimate-csv-importer-pro/extensionModules/MappingExtension.php',
+	);
+	foreach ($mapping_paths as $mapping_path) {
+		if (file_exists($mapping_path)) {
+			require_once $mapping_path;
+			break;
+		}
+	}
+}
 
-	class ExportExtension extends \Smackcoders\FCSV\MappingExtension
+if (class_exists('\Smackcoders\UCI\Core\MappingExtension')) {
+	class ExportExtensionParent extends \Smackcoders\UCI\Core\MappingExtension {}
+} elseif (class_exists('\Smackcoders\WCSV\MappingExtension')) {
+	class ExportExtensionParent extends \Smackcoders\WCSV\MappingExtension {}
+} elseif (class_exists('\Smackcoders\FCSV\MappingExtension')) {
+	class ExportExtensionParent extends \Smackcoders\FCSV\MappingExtension {}
+}
+
+if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
+
+	class ExportExtension extends ExportExtensionParent
 	{
 		public $allacf;
 
@@ -505,8 +538,8 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension')) {
 			$this->plugin = Plugin::getInstance();
 		}
 
-		public function parseData() { error_log("DEBUG: parseData called in ExportExtension.");
-
+		public function parseData()
+		{
 			if (!is_user_logged_in() || !current_user_can('manage_options')) {
 				wp_send_json_error(['message' => 'Unauthorized access.'], 403);
 				return;
@@ -876,10 +909,13 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension')) {
 					$users = $wpdb->get_results($query_to_fetch_users);
 					if (!empty($users)) {
 						foreach ($users as $userInfo) {
+							$this->data[$userId]['ID'] = $userInfo->ID;
 							foreach ($userInfo as $userKey => $userVal) {
 								$this->data[$userId][$userKey] = $userVal;
 							}
 						}
+					} else {
+						$this->data[$userId]['ID'] = $userId;
 					}
 					$userMeta = $wpdb->get_results("SELECT user_id, meta_key, meta_value FROM {$wpdb->prefix}users wp JOIN {$wpdb->prefix}usermeta wpm ON wpm.user_id = wp.ID WHERE ID = {$userId}");
 					$wptypesfields = get_option('wpcf-usermeta');
@@ -1135,6 +1171,10 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension')) {
 				$headers = [];
 				$headers = ['ID', 'Template title', 'Template content', 'Style', 'Template type', 'Created time', 'Created by', 'Template status', 'Category'];
 			}
+			if ($module === 'Users' || $module === 'WooCommerceCustomer') {
+				$headers = array_values(array_diff($headers, array('ID')));
+				array_unshift($headers, 'ID');
+			}
 			if (isset($this->eventExclusions['is_check']) && $this->eventExclusions['is_check'] == 'true'):
 				$headers_with_exclusion = self::applyEventExclusion($headers, $optionalType);
 				$this->headers = $headers_with_exclusion;
@@ -1154,10 +1194,8 @@ if (class_exists('\Smackcoders\FCSV\MappingExtension')) {
 			if (empty($this->headers))
 				$this->generateHeaders($this->module, $this->optionalType);
 			$recordsToBeExport = ExportExtension::$post_export->getRecordsBasedOnPostTypes($this->module, $this->optionalType, $this->conditions, $this->offset, $this->limit, $this->headers);
-error_log("DEBUG: recordsToBeExport count: " . count($recordsToBeExport)); 
-error_log("DEBUG: Module: " . $this->module . ", OptionalType: " . $this->optionalType);
 			if (!empty($recordsToBeExport)) {
-				foreach ($recordsToBeExport as $postId) { error_log("DEBUG: Processing postId: " . $postId . " for module: " . $this->module);
+				foreach ($recordsToBeExport as $postId) {
 					$exp_module = $this->module;
 					if ($exp_module !== 'JetBooking' && $exp_module !== 'JetReviews') {
 						$this->data[$postId] = $this->getPostsDataBasedOnRecordId($postId, $this->module);
@@ -1204,7 +1242,7 @@ error_log("DEBUG: Module: " . $this->module . ", OptionalType: " . $this->option
 						ExportExtension::$edd_export->getEDDOrderDataMaster($postId);
 					if ($this->module == 'EDD_CUSTOMERS')
 						ExportExtension::$edd_export->getEDDCustomerDataMaster($postId);
-					if ($this->module == 'EDD_DISCOUNTS') { error_log("DEBUG: About to call getEDDDiscountDataMaster for " . $postId); } if ($this->module == 'EDD_DISCOUNTS')
+					if ($this->module == 'EDD_DISCOUNTS')
 						ExportExtension::$edd_export->getEDDDiscountDataMaster($postId);
 					
 					if ($this->module == 'SURECART_PRODUCTS' || $this->optionalType == 'SURECART_PRODUCTS')
