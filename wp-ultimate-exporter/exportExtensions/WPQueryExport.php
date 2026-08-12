@@ -401,7 +401,7 @@ class WPQueryExport extends ExportExtension{
         }
         global $wpdb;
         foreach($user_ids as $userkey => $userId){
-            $userMeta = $wpdb->get_results("SELECT user_id, meta_key, meta_value FROM {$wpdb->prefix}users wp JOIN {$wpdb->prefix}usermeta wpm ON wpm.user_id = wp.ID WHERE ID = {$userId}");
+            $userMeta = $wpdb->get_results($wpdb->prepare("SELECT user_id, meta_key, meta_value FROM {$wpdb->prefix}users wp JOIN {$wpdb->prefix}usermeta wpm ON wpm.user_id = wp.ID WHERE ID = %d", absint($userId)));
             $wptypesfields = get_option('wpcf-usermeta');
             $wptypesfields = get_option('wpcf-usermeta');
 
@@ -602,7 +602,7 @@ class WPQueryExport extends ExportExtension{
                                 $user_id = $commentInfo->user_id;
                                 if (!empty($user_id))
                                 {
-                                    $users_login = $wpdb->get_results("SELECT user_login FROM {$wpdb->prefix}users WHERE ID = '$user_id'");
+                                    $users_login = $wpdb->get_results($wpdb->prepare("SELECT user_login FROM {$wpdb->prefix}users WHERE ID = %d", absint($user_id)));
                                     foreach ($users_login as $users_key => $users_value)
                                     {
                                         foreach ($users_value as $u_key => $u_value)

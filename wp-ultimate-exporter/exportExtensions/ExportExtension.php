@@ -184,6 +184,11 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			file_put_contents($debug_log, "=== totalRecords called at " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
 			file_put_contents($debug_log, "POST data: " . print_r($_POST, true) . "\n", FILE_APPEND);
 
+			if (!is_user_logged_in() || !current_user_can('manage_options')) {
+				wp_send_json_error(['message' => 'Unauthorized access.'], 403);
+				return;
+			}
+
 			check_ajax_referer('smack-ultimate-csv-importer', 'securekey');
 			global $wpdb;
 			$module = sanitize_text_field($_POST['module']);
@@ -407,7 +412,11 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					$optional_type = $value;
 					if ($optionalType == $optional_type) {
 						$table_name = 'jet_cct_' . $optional_type;
-						$get_menu = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}$table_name");
+						if (!preg_match('/^[a-zA-Z0-9_]+$/', $table_name)) {
+							echo wp_json_encode(0);
+							wp_die();
+						}
+						$get_menu = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}{$table_name}");
 						if (is_array($get_menu))
 							$total = count($get_menu);
 						else
@@ -417,8 +426,8 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					}
 				}
 			}
-			$get_post_ids = "select DISTINCT ID from $wpdb->posts";
-			$get_post_ids .= " where post_type = '$module'";
+			$get_post_ids = "select DISTINCT ID from {$wpdb->posts}";
+			$get_post_ids .= $wpdb->prepare(" where post_type = %s", $module);
 
 			/**
 			 * Check for specific status
@@ -428,8 +437,8 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					//TODO temporary fix 
 					//wc_get_products only exports default language product 
 					$products = "select DISTINCT ID from {$wpdb->prefix}posts";
-					$products .= " where post_type = '$module'";
-					$products .= "and post_status in ('publish','draft','future','private','pending') ";
+					$products .= $wpdb->prepare(" where post_type = %s", $module);
+					$products .= " and post_status in ('publish','draft','future','private','pending') ";
 					$products = $wpdb->get_col($products);
 
 				} else {
@@ -455,14 +464,15 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			} elseif ($module == 'product_variation') {
 				if (is_plugin_active('polylang/polylang.php') || is_plugin_active('polylang-pro/polylang.php') || is_plugin_active('polylang-wc/polylang-wc.php')) {
 					$extracted_ids = "select DISTINCT ID from {$wpdb->prefix}posts";
-					$extracted_ids .= " where post_type = '$module'";
-					$extracted_ids .= "and post_status in ('publish','draft','future','private','pending') AND post_parent !=0";
+					$extracted_ids .= $wpdb->prepare(" where post_type = %s", $module);
+					$extracted_ids .= " and post_status in ('publish','draft','future','private','pending') AND post_parent !=0";
 					$extracted_id = $wpdb->get_col($extracted_ids);
 					$extracted_ids = array();
 					//fix added for prema
 					foreach ($extracted_id as $ids) {
-						$parent_id = $wpdb->get_var("SELECT post_parent FROM {$wpdb->prefix}posts where ID=$ids");
-						$post_status = $wpdb->get_var("SELECT post_status FROM {$wpdb->prefix}posts where ID=$parent_id");
+						$ids = absint($ids);
+						$parent_id = $wpdb->get_var($wpdb->prepare("SELECT post_parent FROM {$wpdb->prefix}posts where ID=%d", $ids));
+						$post_status = $wpdb->get_var($wpdb->prepare("SELECT post_status FROM {$wpdb->prefix}posts where ID=%d", absint($parent_id)));
 						if (!empty($post_status)) {
 							if ($post_status != 'trash' && $post_status != 'inherit') {
 								$extracted_ids[] = $ids;
@@ -583,13 +593,13 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 				if (empty($_POST['offset']) || sanitize_text_field($_POST['offset']) == 'undefined') {
 					$this->offset = 0;
 				} else {
-					$this->offset = isset($_POST['offset']) ? sanitize_text_field($_POST['offset']) : 0;
+					$this->offset = isset($_POST['offset']) ? (int) $_POST['offset'] : 0;
 				}
 				if (!empty($_POST['limit'])) {
-					$this->limit = isset($_POST['limit']) ? sanitize_text_field($_POST['limit']) : 1000;
+					$this->limit = isset($_POST['limit']) ? (int) $_POST['limit'] : 1000;
 				} else {
 					if (!empty($conditions['specific_iteration_id']['is_check']) && $conditions['specific_iteration_id']['is_check'] == 'true') {
-						$this->limit = !empty($conditions['specific_iteration_id']['iteration_id']) ? $conditions['specific_iteration_id']['iteration_id'] : '';
+						$this->limit = !empty($conditions['specific_iteration_id']['iteration_id']) ? (int) $conditions['specific_iteration_id']['iteration_id'] : 0;
 					} else {
 						$this->limit = 50;
 					}
@@ -650,7 +660,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			// Check for specific authors
 			if ($this->conditions['specific_authors']['is_check'] == '1') {
 				if (isset($this->conditions['specific_authors']['author'])) {
-					$get_comments .= " and comment_author_email = '" . $this->conditions['specific_authors']['author'] . "'";
+					$get_comments .= $wpdb->prepare(" and comment_author_email = %s", $this->conditions['specific_authors']['author']);
 				}
 			}
 			$get_comments .= " order by comment_ID";
@@ -847,7 +857,9 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 				// Get only users with the "customer" role
 				$args = [
 					'role' => 'customer',
-					'fields' => 'ID'
+					'fields' => 'ID',
+					'orderby' => 'ID',
+					'order' => 'ASC'
 				];
 
 				// Check for specific period
@@ -891,14 +903,21 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					}
 				}
 
+				$get_available_user_ids .= " ORDER BY u.ID ASC";
+
 				$availableUserss = $wpdb->get_col($get_available_user_ids);
 			}
 
 
 			if (!empty($availableUserss)) {
 				$this->totalRowCount = count($availableUserss);
+				// Restrict the fetched users to the current batch window. Previously the
+				// full user set was returned on every batch and appended to the file,
+				// which produced duplicate user rows in batched exports.
+				$availableUserss = array_slice($availableUserss, (int) $offset, (int) $limit);
 				$whereCondition = '';
 				foreach ($availableUserss as $userId) {
+					$userId = absint($userId);
 					if ($whereCondition != '') {
 						$whereCondition = $whereCondition . ',' . $userId;
 					} else {
@@ -917,7 +936,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					} else {
 						$this->data[$userId]['ID'] = $userId;
 					}
-					$userMeta = $wpdb->get_results("SELECT user_id, meta_key, meta_value FROM {$wpdb->prefix}users wp JOIN {$wpdb->prefix}usermeta wpm ON wpm.user_id = wp.ID WHERE ID = {$userId}");
+					$userMeta = $wpdb->get_results($wpdb->prepare("SELECT user_id, meta_key, meta_value FROM {$wpdb->prefix}users wp JOIN {$wpdb->prefix}usermeta wpm ON wpm.user_id = wp.ID WHERE ID = %d", $userId));
 					$wptypesfields = get_option('wpcf-usermeta');
 					$wptypesfields = get_option('wpcf-usermeta');
 
@@ -1070,7 +1089,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			// Check for specific authors
 			if ($this->conditions['specific_authors']['is_check'] == '1') {
 				if (isset($this->conditions['specific_authors']['author'])) {
-					$get_comments .= " and comment_author_email = '" . $this->conditions['specific_authors']['author'] . "'";
+					$get_comments .= $wpdb->prepare(" and comment_author_email = %s", $this->conditions['specific_authors']['author']);
 				}
 			}
 
@@ -1079,13 +1098,15 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			}
 
 			$comments = $wpdb->get_results($get_comments);
+			$offset = (int) $this->offset;
+			$limit = (int) $this->limit;
 
 			if (!empty($this->conditions['specific_period']['is_check']) && $this->conditions['specific_period']['is_check'] == 'true') {
 				if ($this->conditions['specific_period']['from'] == $this->conditions['specific_period']['to']) {
 					$limited_comments = array();
 					foreach ($comments as $comments_value) {
 						// $get_comment_date_time = $wpdb->get_results($wpdb->prepare("SELECT comment_date FROM {$wpdb->prefix}comments WHERE comment_id=$comments_value->comment_ID") , ARRAY_A);
-						$get_comment_date_time = $wpdb->get_results("SELECT comment_date FROM {$wpdb->prefix}comments WHERE comment_id = {$comments_value->comment_ID}", ARRAY_A);
+						$get_comment_date_time = $wpdb->get_results($wpdb->prepare("SELECT comment_date FROM {$wpdb->prefix}comments WHERE comment_id = %d", $comments_value->comment_ID), ARRAY_A);
 						$get_comment_date = date("Y-m-d", strtotime($get_comment_date_time[0]['comment_date']));
 						if ($get_comment_date == $this->conditions['specific_period']['from']) {
 							$get_comment_date_value[] = $comments_value;
@@ -1096,12 +1117,12 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					$limited_comments = $get_comment_date_value;
 				} else {
 					$this->totalRowCount = count($comments);
-					$get_comments .= " order by comment_ID asc limit $this->offset, $this->limit";
+					$get_comments .= " order by comment_ID asc limit {$offset}, {$limit}";
 					$limited_comments = $wpdb->get_results($get_comments);
 				}
 			} else {
 				$this->totalRowCount = count($comments);
-				$get_comments .= " order by comment_ID asc limit $this->offset, $this->limit";
+				$get_comments .= " order by comment_ID asc limit {$offset}, {$limit}";
 				$limited_comments = $wpdb->get_results($get_comments);
 			}
 
@@ -1109,7 +1130,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 				foreach ($limited_comments as $commentInfo) {
 					$user_id = $commentInfo->user_id;
 					if (!empty($user_id)) {
-						$users_login = $wpdb->get_results("SELECT user_login FROM {$wpdb->prefix}users WHERE ID = '$user_id'");
+						$users_login = $wpdb->get_results($wpdb->prepare("SELECT user_login FROM {$wpdb->prefix}users WHERE ID = %d", $user_id));
 						foreach ($users_login as $users_key => $users_value) {
 							foreach ($users_value as $u_key => $u_value) {
 								$users_id = $u_value;
@@ -1294,8 +1315,13 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					$optional_type = $value;
 					if ($this->optionalType == $optional_type) {
 						$table_name = 'jet_cct_' . $this->optionalType;
+						if (!preg_match('/^[a-zA-Z0-9_]+$/', $table_name)) {
+							continue;
+						}
+						$jet_offset = (int) $this->offset;
+						$jet_limit = (int) $this->limit;
 
-						$jet_values = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}$table_name order by _ID asc limit $this->offset,$this->limit ");
+						$jet_values = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}{$table_name} order by _ID asc limit {$jet_offset},{$jet_limit} ");
 						if (!empty($jet_values)) {
 							foreach ($jet_values as $jet_value) {
 								foreach ($jet_value as $field_id => $value) {
@@ -1310,7 +1336,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					}
 				}
 				$slug = $this->optionalType;
-				$getarg = $wpdb->get_results("SELECT args from {$wpdb->prefix}jet_post_types where slug = '$slug' and status = 'content-type'", ARRAY_A);
+				$getarg = $wpdb->get_results($wpdb->prepare("SELECT args from {$wpdb->prefix}jet_post_types where slug = %s and status = 'content-type'", $slug), ARRAY_A);
 				foreach ($getarg as $key => $value) {
 					$arg_data = $value['args'];
 					break;
@@ -1748,10 +1774,11 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			global $sitepress;
 			$post_title = '';
 			if ($exp_module == 'Categories' || $exp_module == 'Tags' || $exp_module == 'Taxonomies') {
-				$terms = $wpdb->get_results("select term_taxonomy_id from {$wpdb->prefix}term_taxonomy where description like '%$id%'", ARRAY_A);
+				$like = '%' . $wpdb->esc_like((string) $id) . '%';
+				$terms = $wpdb->get_results($wpdb->prepare("select term_taxonomy_id from {$wpdb->prefix}term_taxonomy where description like %s", $like), ARRAY_A);
 				$terms_id = json_decode(json_encode($terms), true);
 			} else {
-				$terms = $wpdb->get_results("select term_taxonomy_id from $wpdb->term_relationships where object_id ='{$id}' order by term_taxonomy_id desc");
+				$terms = $wpdb->get_results($wpdb->prepare("select term_taxonomy_id from {$wpdb->term_relationships} where object_id = %d order by term_taxonomy_id desc", absint($id)));
 				$terms_id = json_decode(json_encode($terms), true);
 			}
 			if (is_plugin_active('polylang-pro/polylang.php')) {
@@ -3177,7 +3204,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 		{
 			if (is_plugin_active('all-in-one-seo-pack/all_in_one_seo_pack.php') || is_plugin_active('all-in-one-seo-pack-pro/all_in_one_seo_pack.php')) {
 				global $wpdb;
-				$aioseo_slug = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}aioseo_posts WHERE post_id='$post_id' ");
+				$aioseo_slug = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}aioseo_posts WHERE post_id=%d", absint($post_id)));
 				return $aioseo_slug;
 			}
 
@@ -3399,7 +3426,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 								} elseif ($jet_data['JECCT'][$dkey]['type'] == 'media') {
 									if (is_numeric($value)) {
 										if ($value != 0) {
-											$get_guid_name = $wpdb->get_results("SELECT guid FROM {$wpdb->prefix}posts WHERE id = '$value'");
+											$get_guid_name = $wpdb->get_results($wpdb->prepare("SELECT guid FROM {$wpdb->prefix}posts WHERE id = %d", absint($value)));
 											foreach ($get_guid_name as $media_key => $value) {
 												$darray1[$jet_data['JECCT'][$dkey]['name']] = $value->guid;
 											}
@@ -3419,7 +3446,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 									$get_guid = '';
 									foreach ($get_meta_list as $get_meta) {
 										if (is_numeric($get_meta)) {
-											$get_guid_name = $wpdb->get_results("SELECT guid FROM {$wpdb->prefix}posts WHERE id = '$get_meta'");
+											$get_guid_name = $wpdb->get_results($wpdb->prepare("SELECT guid FROM {$wpdb->prefix}posts WHERE id = %d", absint($get_meta)));
 											foreach ($get_guid_name as $gallery_key => $value) {
 												$get_guid .= $value->guid . ',';
 											}

@@ -35,10 +35,12 @@ class CustomerReviewExport extends ExportExtension{
 
 	public function FetchCustomerReviews($module, $optionalType, $conditions, $offset, $limit, $mode = null) {
 		global $wpdb;
+		$offset = (int) $offset;
+		$limit = (int) $limit;
 		$headers = array();
 		CustomerReviewExport::$export_instance->generateHeaders($module, $optionalType);
 		$get_customer_reviews = "select DISTINCT ID from {$wpdb->prefix}posts";
-		$get_customer_reviews .= " where post_type = '$optionalType'";
+		$get_customer_reviews .= $wpdb->prepare(" where post_type = %s", $optionalType);
 
 		/**
 		 * Check for specific status
@@ -71,12 +73,12 @@ class CustomerReviewExport extends ExportExtension{
 
 		if($conditions['specific_authors']['is_check'] == 'true') {
 			if(isset($conditions['specific_authors']['author']) && $conditions['specific_authors']['author'] != 0) {
-				$get_customer_reviews .= " and c.comment_author_email = {$conditions['specific_authors']['author']}";
+				$get_customer_reviews .= $wpdb->prepare(" and c.comment_author_email = %s", $conditions['specific_authors']['author']);
 			}
 		}
 		$get_total_row_count = $wpdb->get_col($get_customer_reviews);
 		CustomerReviewExport::$export_instance->totalRowCount = count($get_total_row_count);
-		$offset_limit = " order by ID asc limit $offset, $limit";
+		$offset_limit = " order by ID asc limit {$offset}, {$limit}";
 		$query_with_offset_limit = $get_customer_reviews . $offset_limit;
 		$result = $wpdb->get_col($query_with_offset_limit);
 

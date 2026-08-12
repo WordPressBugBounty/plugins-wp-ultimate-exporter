@@ -1059,7 +1059,7 @@ class WooCommerceExport extends ExportExtension{
 						if (is_a($attribute, 'WC_Product_Attribute')) {
 							if(strpos($attribute['name'],'pa_') !== false){
 								$attr_name = str_replace('pa_', '', $attribute['name']);
-								$attr_name = $wpdb->get_var("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name='$attr_name'");
+								$attr_name = $wpdb->get_var($wpdb->prepare("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name=%s", $attr_name));
 							}
 							else{
 								$attr_name = $attribute['name'];
@@ -1080,8 +1080,8 @@ class WooCommerceExport extends ExportExtension{
 										$term_names[] = $term->name;	
 											// Retrieve swatch type and value if available
 										if(is_plugin_active( 'woo-variation-swatches/woo-variation-swatches.php' ) || is_plugin_active( 'woo-variation-swatches-pro/woo-variation-swatches.php' )){
-											$term_meta = $wpdb->get_results("SELECT meta_key,meta_value FROM {$wpdb->termmeta} WHERE term_id = $term->term_id ",ARRAY_A);
-											$attri_type = $wpdb->get_results( "SELECT attribute_type FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = '$attr_name' ",ARRAY_A);
+											$term_meta = $wpdb->get_results($wpdb->prepare("SELECT meta_key,meta_value FROM {$wpdb->termmeta} WHERE term_id = %d ", absint($term->term_id)),ARRAY_A);
+											$attri_type = $wpdb->get_results( $wpdb->prepare("SELECT attribute_type FROM {$wpdb->prefix}woocommerce_attribute_taxonomies where attribute_label = %s ", $attr_name),ARRAY_A);
 											$attri_type = !empty($attri_type[0]['attribute_type']) ? $attri_type[0]['attribute_type'] : '';
 											$term_meta = end($term_meta);
 											$swatch_value = '';
@@ -1119,7 +1119,7 @@ class WooCommerceExport extends ExportExtension{
 									$attribute_name = $attr_name . '->' . $attri_type;
 									$att_values = implode(',', $term_names);
 								} else if (!empty($term_names)) {
-									$attr_name = $wpdb->get_var("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name='$attr_name'");
+									$attr_name = $wpdb->get_var($wpdb->prepare("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name=%s", $attr_name));
 									$attribute_name = $attr_name;
 									$att_values = implode(',', $term_names);
 								}
@@ -1151,8 +1151,8 @@ class WooCommerceExport extends ExportExtension{
 				$i=1;
 				foreach ($product_attributes as $attribute_key => $attribute) {
 					$attr_name = str_replace('pa_', '', $attribute_key);
-					$attr_name = $wpdb->get_var("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name='$attr_name'");
-					$attr_value = $wpdb->get_var("SELECT name FROM {$wpdb->prefix}terms WHERE slug = '$attribute'");
+					$attr_name = $wpdb->get_var($wpdb->prepare("SELECT attribute_label FROM {$wpdb->prefix}woocommerce_attribute_taxonomies WHERE attribute_name=%s", $attr_name));
+					$attr_value = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}terms WHERE slug = %s", $attribute));
 					WooCommerceExport::$export_instance->data[$id]['product_attribute_name'.$i] = $attr_name;
 					WooCommerceExport::$export_instance->data[$id]['product_attribute_value'.$i] = $attr_value;
 					$i++;
@@ -1571,8 +1571,9 @@ class WooCommerceExport extends ExportExtension{
 	public function getCourseData($id)
 	{
 		global $wpdb;
+		$id = absint($id);
 
-		$get_section_details = $wpdb->get_results("SELECT section_id, section_name, section_description FROM {$wpdb->prefix}learnpress_sections WHERE section_course_id = $id ", ARRAY_A);
+		$get_section_details = $wpdb->get_results($wpdb->prepare("SELECT section_id, section_name, section_description FROM {$wpdb->prefix}learnpress_sections WHERE section_course_id = %d ", $id), ARRAY_A);
 		$section_names = '';
 		$section_descriptions = '';
 		$get_lesson_name = '';
@@ -1587,8 +1588,8 @@ class WooCommerceExport extends ExportExtension{
 			$section_names .= $section_details['section_name'] . '|';
 			$section_descriptions .= $section_details['section_description'] . '|';
 
-			$section_id = $section_details['section_id'];
-			$get_section_item_details = $wpdb->get_results("SELECT item_id, item_type FROM {$wpdb->prefix}learnpress_section_items WHERE section_id = $section_id ", ARRAY_A);
+			$section_id = absint($section_details['section_id']);
+			$get_section_item_details = $wpdb->get_results($wpdb->prepare("SELECT item_id, item_type FROM {$wpdb->prefix}learnpress_section_items WHERE section_id = %d ", $section_id), ARRAY_A);
 
 			$lesson_name = '';
 			$lesson_description = '';
@@ -1599,18 +1600,18 @@ class WooCommerceExport extends ExportExtension{
 			$quiz_metas = [];
 
 			foreach($get_section_item_details as $section_item_details){
-				$section_item_id = $section_item_details['item_id'];
+				$section_item_id = absint($section_item_details['item_id']);
 				if($section_item_details['item_type'] == 'lp_lesson'){
-					$lesson_name .= $wpdb->get_var("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = $section_item_id ") . ', ';
-					$lesson_description .= $wpdb->get_var("SELECT post_content FROM {$wpdb->prefix}posts WHERE ID = $section_item_id "). ', ';
-					$lesson_duration .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $section_item_id AND meta_key = '_lp_duration' ") . ', ';
-					$lesson_preview .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $section_item_id AND meta_key = '_lp_preview' ") . ', ';
+					$lesson_name .= $wpdb->get_var($wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = %d ", $section_item_id)) . ', ';
+					$lesson_description .= $wpdb->get_var($wpdb->prepare("SELECT post_content FROM {$wpdb->prefix}posts WHERE ID = %d ", $section_item_id)). ', ';
+					$lesson_duration .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_duration' ", $section_item_id)) . ', ';
+					$lesson_preview .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_preview' ", $section_item_id)) . ', ';
 				}
 				elseif($section_item_details['item_type'] == 'lp_quiz'){
-					$quiz_name .= $wpdb->get_var("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = $section_item_id ") . ', ';
-					$quiz_description .= $wpdb->get_var("SELECT post_content FROM {$wpdb->prefix}posts WHERE ID = $section_item_id "). ', ';
+					$quiz_name .= $wpdb->get_var($wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = %d ", $section_item_id)) . ', ';
+					$quiz_description .= $wpdb->get_var($wpdb->prepare("SELECT post_content FROM {$wpdb->prefix}posts WHERE ID = %d ", $section_item_id)). ', ';
 
-					$quiz_meta = $wpdb->get_results("SELECT meta_key, meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $section_item_id AND meta_key LIKE '_lp_%' ", ARRAY_A);
+					$quiz_meta = $wpdb->get_results($wpdb->prepare("SELECT meta_key, meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key LIKE '_lp_%%' ", $section_item_id), ARRAY_A);
 					foreach($quiz_meta as $quiz_meta_values){
 						$quiz_key = $quiz_meta_values['meta_key'];
 						$quiz_value = $quiz_meta_values['meta_value'] . ', ';
@@ -1653,13 +1654,15 @@ class WooCommerceExport extends ExportExtension{
 
 	public function getLessonData($id){
 		global $wpdb;
-		$lesson_duration = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id AND meta_key = '_lp_duration' ");
+		$id = absint($id);
+		$lesson_duration = $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_duration' ", $id));
 		WooCommerceExport::$export_instance->data[$id]['_lp_lesson_duration'] = $lesson_duration;
 
-		$get_section_id = $wpdb->get_var("SELECT section_id FROM {$wpdb->prefix}learnpress_section_items WHERE item_id = $id AND item_type = 'lp_lesson' ");
+		$get_section_id = $wpdb->get_var($wpdb->prepare("SELECT section_id FROM {$wpdb->prefix}learnpress_section_items WHERE item_id = %d AND item_type = 'lp_lesson' ", $id));
 		if(!empty($get_section_id)){
-			$get_section_name = $wpdb->get_var("SELECT section_name FROM {$wpdb->prefix}learnpress_sections WHERE section_id = $get_section_id ");
-			$get_section_course_id = $wpdb->get_var("SELECT section_course_id FROM {$wpdb->prefix}learnpress_sections WHERE section_id = $get_section_id ");
+			$get_section_id = absint($get_section_id);
+			$get_section_name = $wpdb->get_var($wpdb->prepare("SELECT section_name FROM {$wpdb->prefix}learnpress_sections WHERE section_id = %d ", $get_section_id));
+			$get_section_course_id = $wpdb->get_var($wpdb->prepare("SELECT section_course_id FROM {$wpdb->prefix}learnpress_sections WHERE section_id = %d ", $get_section_id));
 
 			WooCommerceExport::$export_instance->data[$id]['curriculum_name'] = $get_section_name;
 			WooCommerceExport::$export_instance->data[$id]['course_id'] = $get_section_course_id;
@@ -1668,13 +1671,15 @@ class WooCommerceExport extends ExportExtension{
 
 	public function getQuizData($id){
 		global $wpdb;
-		$quiz_retake_count = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id AND meta_key = '_lp_retake_count' ");
+		$id = absint($id);
+		$quiz_retake_count = $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_retake_count' ", $id));
 		WooCommerceExport::$export_instance->data[$id]['_lp_quiz_retake_count'] = $quiz_retake_count;
 
-		$get_section_id = $wpdb->get_var("SELECT section_id FROM {$wpdb->prefix}learnpress_section_items WHERE item_id = $id AND item_type = 'lp_quiz' ");
+		$get_section_id = $wpdb->get_var($wpdb->prepare("SELECT section_id FROM {$wpdb->prefix}learnpress_section_items WHERE item_id = %d AND item_type = 'lp_quiz' ", $id));
 		if(!empty($get_section_id)){
-			$get_section_name = $wpdb->get_var("SELECT section_name FROM {$wpdb->prefix}learnpress_sections WHERE section_id = $get_section_id ");
-			$get_section_course_id = $wpdb->get_var("SELECT section_course_id FROM {$wpdb->prefix}learnpress_sections WHERE section_id = $get_section_id ");
+			$get_section_id = absint($get_section_id);
+			$get_section_name = $wpdb->get_var($wpdb->prepare("SELECT section_name FROM {$wpdb->prefix}learnpress_sections WHERE section_id = %d ", $get_section_id));
+			$get_section_course_id = $wpdb->get_var($wpdb->prepare("SELECT section_course_id FROM {$wpdb->prefix}learnpress_sections WHERE section_id = %d ", $get_section_id));
 
 			WooCommerceExport::$export_instance->data[$id]['curriculum_name'] = $get_section_name;
 			WooCommerceExport::$export_instance->data[$id]['course_id'] = $get_section_course_id;
@@ -1688,18 +1693,18 @@ class WooCommerceExport extends ExportExtension{
 		$get_question_type = '';
 		$get_option_value = '';
 
-		$get_question_ids = $wpdb->get_results("SELECT question_id FROM {$wpdb->prefix}learnpress_quiz_questions WHERE quiz_id = $id ", ARRAY_A);
+		$get_question_ids = $wpdb->get_results($wpdb->prepare("SELECT question_id FROM {$wpdb->prefix}learnpress_quiz_questions WHERE quiz_id = %d ", $id), ARRAY_A);
 		foreach($get_question_ids as $question_ids){
-			$question_id = $question_ids['question_id'];
-			$get_question_title .= $wpdb->get_var("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = $question_id ") . ',';
-			$get_question_content .= $wpdb->get_var("SELECT post_content FROM {$wpdb->prefix}posts WHERE ID = $question_id ") . ',';
+			$question_id = absint($question_ids['question_id']);
+			$get_question_title .= $wpdb->get_var($wpdb->prepare("SELECT post_title FROM {$wpdb->prefix}posts WHERE ID = %d ", $question_id)) . ',';
+			$get_question_content .= $wpdb->get_var($wpdb->prepare("SELECT post_content FROM {$wpdb->prefix}posts WHERE ID = %d ", $question_id)) . ',';
 
-			$get_question_mark .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $question_id AND meta_key = '_lp_mark' ") . ', ';	
-			$get_question_explanation .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $question_id AND meta_key = '_lp_explanation' ") . ',';	
-			$get_question_hint .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $question_id AND meta_key = '_lp_hint' ") . ',';	
-			$get_question_type .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $question_id AND meta_key = '_lp_type' ") . ',';	
+			$get_question_mark .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_mark' ", $question_id)) . ', ';	
+			$get_question_explanation .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_explanation' ", $question_id)) . ',';	
+			$get_question_hint .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_hint' ", $question_id)) . ',';	
+			$get_question_type .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_lp_type' ", $question_id)) . ',';	
 
-			$get_question_options = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = $question_id ", ARRAY_A);
+			$get_question_options = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = %d ", $question_id), ARRAY_A);
 			$option_value = '';
 			foreach($get_question_options as $question_option){
 				if(empty($question_option['is_true'])){
@@ -1723,9 +1728,10 @@ class WooCommerceExport extends ExportExtension{
 
 	public function getQuestionData($id){
 		global $wpdb;
-		$get_quiz_id = $wpdb->get_var("SELECT quiz_id FROM {$wpdb->prefix}learnpress_quiz_questions WHERE question_id = $id ");
+		$id = absint($id);
+		$get_quiz_id = $wpdb->get_var($wpdb->prepare("SELECT quiz_id FROM {$wpdb->prefix}learnpress_quiz_questions WHERE question_id = %d ", $id));
 
-		$get_question_options = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = $id ", ARRAY_A);
+		$get_question_options = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}learnpress_question_answers WHERE question_id = %d ", $id), ARRAY_A);
 		$option_value = '';
 		foreach($get_question_options as  $question_options){
 			if(empty($question_options['is_true'])){
@@ -1735,10 +1741,12 @@ class WooCommerceExport extends ExportExtension{
 		}
 
 		if(!empty($get_quiz_id)){
-			$get_section_id = $wpdb->get_var("SELECT section_id FROM {$wpdb->prefix}learnpress_section_items WHERE item_id = $get_quiz_id AND item_type = 'lp_quiz' ");
+			$get_quiz_id = absint($get_quiz_id);
+			$get_section_id = $wpdb->get_var($wpdb->prepare("SELECT section_id FROM {$wpdb->prefix}learnpress_section_items WHERE item_id = %d AND item_type = 'lp_quiz' ", $get_quiz_id));
 			if(!empty($get_section_id)){
-				$get_section_name = $wpdb->get_var("SELECT section_name FROM {$wpdb->prefix}learnpress_sections WHERE section_id = $get_section_id ");
-				$get_section_course_id = $wpdb->get_var("SELECT section_course_id FROM {$wpdb->prefix}learnpress_sections WHERE section_id = $get_section_id ");
+				$get_section_id = absint($get_section_id);
+				$get_section_name = $wpdb->get_var($wpdb->prepare("SELECT section_name FROM {$wpdb->prefix}learnpress_sections WHERE section_id = %d ", $get_section_id));
+				$get_section_course_id = $wpdb->get_var($wpdb->prepare("SELECT section_course_id FROM {$wpdb->prefix}learnpress_sections WHERE section_id = %d ", $get_section_id));
 
 				WooCommerceExport::$export_instance->data[$id]['curriculum_name'] = $get_section_name;
 				WooCommerceExport::$export_instance->data[$id]['course_id'] = $get_section_course_id;
@@ -1751,25 +1759,26 @@ class WooCommerceExport extends ExportExtension{
 
 	public function getOrderData($id){
 		global $wpdb;
+		$id = absint($id);
 
-		$order_status = $wpdb->get_var("SELECT post_status FROM {$wpdb->prefix}posts WHERE ID = $id ");
-		$order_date = $wpdb->get_var("SELECT post_date FROM {$wpdb->prefix}posts WHERE ID = $id ");
-		$order_total = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id AND meta_key = '_order_total' ");
-		$order_subtotal = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id AND meta_key = '_order_subtotal' ");
-		$user_id = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id AND meta_key = '_user_id' ");
+		$order_status = $wpdb->get_var($wpdb->prepare("SELECT post_status FROM {$wpdb->prefix}posts WHERE ID = %d ", $id));
+		$order_date = $wpdb->get_var($wpdb->prepare("SELECT post_date FROM {$wpdb->prefix}posts WHERE ID = %d ", $id));
+		$order_total = $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_order_total' ", $id));
+		$order_subtotal = $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_order_subtotal' ", $id));
+		$user_id = $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = %d AND meta_key = '_user_id' ", $id));
 
-		$get_order_items = $wpdb->get_results("SELECT order_item_id FROM {$wpdb->prefix}learnpress_order_items WHERE order_id = $id ",ARRAY_A);
+		$get_order_items = $wpdb->get_results($wpdb->prepare("SELECT order_item_id FROM {$wpdb->prefix}learnpress_order_items WHERE order_id = %d ", $id),ARRAY_A);
 		$course_id = '';
 		$item_quantity = '';
 		$item_total = '';
 		$item_subtotal = '';
 		foreach($get_order_items as $get_order_values){
-			$order_item_id = $get_order_values['order_item_id'];
+			$order_item_id = absint($get_order_values['order_item_id']);
 
-			$course_id .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = $order_item_id AND meta_key = '_course_id' ") . ', ';
-			$item_quantity .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = $order_item_id AND meta_key = '_quantity' ") . ', ';
-			$item_total .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = $order_item_id AND meta_key = '_subtotal' ") . ', ';
-			$item_subtotal .= $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = $order_item_id AND meta_key = '_total' ") . ', ';
+			$course_id .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = %d AND meta_key = '_course_id' ", $order_item_id)) . ', ';
+			$item_quantity .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = %d AND meta_key = '_quantity' ", $order_item_id)) . ', ';
+			$item_total .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = %d AND meta_key = '_subtotal' ", $order_item_id)) . ', ';
+			$item_subtotal .= $wpdb->get_var($wpdb->prepare("SELECT meta_value FROM {$wpdb->prefix}learnpress_order_itemmeta WHERE learnpress_order_item_id = %d AND meta_key = '_total' ", $order_item_id)) . ', ';
 		}
 
 		WooCommerceExport::$export_instance->data[$id]['order_status'] = $order_status;

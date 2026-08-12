@@ -1,25 +1,33 @@
-=== Export All Posts, Products, Orders, Refunds & Users ===
+=== Export All Posts, Products, Orders & Users | WP Ultimate Exporter | WordPress CSV Export ===
 Contributors: smackcoders, premairuthayarajan
 Donate link: https://www.paypal.me/smackcoders
-Tags: export, wordpress csv export, export woocommerce products, export orders, product export, migrate, csv, exporter, order export, export woocommerce, export wordpress, wordpress XMl export, csv export, XML export, csv exporter, export woocommerce coupons, export custom post type, easy digital downloads export
+Tags: export orders, product export, migration export, export woocommerce products, wordpress csv export, csv export, users export, woocommerce export, export woocommerce products csv, bulk export woocommerce products, wordpress export posts, export woocommerce orders, woocommerce csv export, export custom post type, easy digital downloads export
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 2.24.1
-Version: 2.24.1
+Stable tag: 3.0
+Version: 3.0
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
-Export any WordPress website including WooCommerce data seamlessly with our powerful export plugin. Save records as CSV, XML, or Excel file for secure backup, smooth migration, and efficient data management.
+Export WooCommerce products, orders, users and any WordPress content to CSV, XML, Excel or Google Sheets file. Bulk export posts, pages, custom post types, and more. An add-on for WP Ultimate CSV Importer.
 
 == Description ==
 
-= Secure, Fast, and Flexible WordPress Data Export =
+= Export WooCommerce Products, Orders, Users & Any WordPress Content =
 
-Looking for a reliable way to back up, migrate, or store your WordPress content? **WP Ultimate Exporter** is the ultimate solution! This feature-rich export plugin enables you to extract posts, pages, WooCommerce products, orders, users, and more in easily accessible file formats.
+Need to export WooCommerce products to CSV, bulk export orders to Excel, or migrate your entire WordPress site to a new host? **WP Ultimate Exporter** handles all of it — posts, pages, WooCommerce products, orders, coupons, users, custom post types, and more — exported to CSV, XML, XLS, XLSX, JSON, or TSV in just a few clicks.
 
-**Important Note:** WP Ultimate Exporter is an add-on that requires the **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** to function.
-With this plugin, you can export all your WordPress content—including posts, pages, custom fields, users, and WooCommerce data—ensuring secure backups and effortless migrations.
+**Important Note:** WP Ultimate Exporter is an add-on that requires the free **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** plugin to function.
+
+**This add-on is part of the WP Ultimate CSV Importer ecosystem:**
+
+* **[WP Ultimate CSV Importer](https://wordpress.org/plugins/wp-ultimate-csv-importer/)** (Free, required) — Import posts, pages, custom post types, and more from CSV, XML, or Excel.
+* **[Import WooCommerce Suite](https://wordpress.org/plugins/import-woocommerce/)** — Import WooCommerce products, orders, coupons, customers, and reviews.
+* **[Import Users & Customers with Meta](https://wordpress.org/plugins/import-users/)** — Bulk import WordPress users and WooCommerce customers with full meta support.
+* **WP Ultimate Exporter** (This plugin) — Export any WordPress or WooCommerce data to CSV, XML, Excel, JSON, or TSV.
+
+Install just what you need, or use all four together for a complete import/export solution.
 
 **Top Features & Benefits**
 
@@ -37,6 +45,33 @@ With this plugin, you can export all your WordPress content—including posts, p
 - **Iteration-Based Export** – Export large volumes of data in smaller batches to prevent timeouts and improve stability.
 
 Unlock advanced filtering options and seamless Google Sheets export with **[Ultimate Exporter Pro](https://www.smackcoders.com/wp-ultimate-exporter.html?utm_source=wordpress&utm_medium=readme&utm_campaign=free_exporter).**
+
+= Supported Third-Party Plugins =
+
+The exporter works out of the box with a wide range of popular WordPress plugins:
+
+* **SEO:** All in One SEO, Rank Math, Slim SEO
+* **Page Builders / Custom Fields:** ACF (Advanced Custom Fields), Meta Box (latest version), JetEngine (latest version), Secure Custom Fields, Toolset Types
+* **Multilingual:** WPML, Polylang, Polylang for WooCommerce
+* **Membership:** WP-Members, MemberPress
+* **WooCommerce Extensions:** Product Bundles, Variation Swatcher, YITH Order Tracking, YITH Barcodes, Cost of Goods, Extra Product Options, PPOM
+* **LMS:** LearnPress (Courses, Lessons, Quizzes, Orders)
+* **Directory & Listings:** GeoDirectory, Business Directory Plugin, Advanced Classifieds & Directory Pro, Listeo theme
+* **eCommerce:** Easy Digital Downloads (Downloads, Customers, Discounts), SureCart (Products, Coupons, Customers)
+* **Other:** BBPress, WP Job Manager, Events Calendar, Jet Bookings, JetEngine CCT
+
+= Use Cases =
+
+* **Export WooCommerce products to CSV** — Bulk export your entire product catalog including variations, images, categories, and attributes for migration, backup, or supplier updates.
+* **Export WooCommerce orders to Excel** — Pull all orders or filter by date range and export to XLS for accounting, fulfillment, or analysis.
+* **Export WooCommerce customers** — Export your full customer database including billing and shipping details to CSV for CRM import or email marketing.
+* **Migrate WordPress site content** — Export posts, pages, and custom post types with the one-click migration ZIP for clean site-to-site transfers.
+* **Export WordPress users** — Bulk export user profiles, roles, and meta fields to CSV for backup or migration to another site.
+* **Export custom post types** — Export content from any registered custom post type including ACF, Meta Box, and JetEngine fields.
+* **Export membership data** — Export WP-Members or MemberPress subscriber data for analysis or platform migration.
+* **Back up WooCommerce coupons** — Export all coupon codes and discount rules before a site migration or as a periodic backup.
+
+
 
 = Multilingual Data Export =
 
@@ -415,6 +450,14 @@ Yes. You can export Easy Digital Downloads data, including Downloads, Customers,
 
 
 == Changelog ==
+
+= 3.0 =
+* Improved: Aligned with WP Ultimate CSV Importer 9.0.
+* Fixed: an SQL injection vulnerability and hardened database queries across export operations.
+
+= 2.24.2 =
+* Updated: Support for the latest versions of JetEngine and Meta Box plugins.
+
 = 2.24.1 =
 * Fixed total count mismatch issue for Custom Post Type (CPT) exports.
 * Fixed issue where Custom Post Type exports generated empty rows in CSV files.
@@ -892,10 +935,9 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
-= 2.23.1 =
+= 3.0 =
 
-Upgrade to version 2.23.1 to ensure compatibility with WooCommerce High-Performance Order Storage (HPOS).
-
+Aligned with WP Ultimate CSV Importer 9.0, including the redesigned interface. Update alongside the core plugin. Recommended for all users.
 
 
 

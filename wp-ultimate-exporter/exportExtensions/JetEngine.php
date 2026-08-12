@@ -45,8 +45,10 @@ class JetEngineExport extends ExportExtension{
 	{
 
         if(is_plugin_active('jet-engine/jet-engine.php')){
+			global $wpdb;
+			global $optionalType;
 
-			$jetEnginefields = $wpdb->get_results("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = '$optionalType' AND status IN ('publish','built-in')", ARRAY_A);
+			$jetEnginefields = $wpdb->get_results($wpdb->prepare("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = %s AND status IN ('publish','built-in')", $optionalType), ARRAY_A);
 			$jetEnginefields[0]['meta_fields']=isset($jetEnginefields[0]['meta_fields'])?$jetEnginefields[0]['meta_fields']:'';
 
 			$unserializedMeta = maybe_unserialize($jetEnginefields[0]['meta_fields']);

@@ -66,6 +66,8 @@ class PostExport extends ExportExtension
 	public function getRecordsBasedOnPostTypes($module, $optionalType, $conditions, $offset, $limit, $headers = '')
 	{
 		global $wpdb, $sitepress;
+		$offset = (int) $offset;
+		$limit = (int) $limit;
 		if ($module == 'JetBooking') {
 			if (!empty($conditions['specific_jetbooking_status']['is_check']) && $conditions['specific_jetbooking_status']['is_check'] == 'true' && !empty($conditions['specific_jetbooking_status']['status'])) {
 				$jet_booking_status = $conditions['specific_jetbooking_status']['status'];
@@ -92,17 +94,17 @@ class PostExport extends ExportExtension
 		}
 
 		if ($module == 'EDD_CUSTOMERS') {
-			$post_ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}edd_customers ORDER BY id ASC LIMIT $offset, $limit");
+			$post_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->prefix}edd_customers ORDER BY id ASC LIMIT %d, %d", $offset, $limit));
 			self::$export_instance->totalRowCount = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}edd_customers");
 			return $post_ids;
 		}
 
 		if ($module == 'EDD_DISCOUNTS') {
 			if ($this->is_edd_3_0_plus()) {
-				$post_ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}edd_adjustments WHERE type = 'discount' ORDER BY id ASC LIMIT $offset, $limit");
+				$post_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->prefix}edd_adjustments WHERE type = 'discount' ORDER BY id ASC LIMIT %d, %d", $offset, $limit));
 				self::$export_instance->totalRowCount = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}edd_adjustments WHERE type = 'discount'");
 			} else {
-				$post_ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}edd_discounts ORDER BY id ASC LIMIT $offset, $limit");
+				$post_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->prefix}edd_discounts ORDER BY id ASC LIMIT %d, %d", $offset, $limit));
 				self::$export_instance->totalRowCount = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}edd_discounts");
 			}
 			return $post_ids;
@@ -131,15 +133,15 @@ class PostExport extends ExportExtension
 			if (is_plugin_active('polylang/polylang.php') || is_plugin_active('polylang-pro/polylang.php') || is_plugin_active('polylang-wc/polylang-wc.php')) {
 				$module = 'product_variation';
 				$extracted_ids = "select DISTINCT ID from {$wpdb->prefix}posts";
-				$extracted_ids .= " where post_type = '$module'";
-				$extracted_ids .= "and post_status in ('publish','draft','future','private','pending') AND post_parent!=0";
+				$extracted_ids .= $wpdb->prepare(" where post_type = %s", $module);
+				$extracted_ids .= " and post_status in ('publish','draft','future','private','pending') AND post_parent!=0";
 				$extracted_id = $wpdb->get_col($extracted_ids);
 				$extracted_ids = array();
 				foreach ($extracted_id as $ids) {
 
-					$parent_id = $wpdb->get_var("SELECT post_parent FROM {$wpdb->prefix}posts where ID=$ids");
+					$parent_id = $wpdb->get_var($wpdb->prepare("SELECT post_parent FROM {$wpdb->prefix}posts where ID=%d", absint($ids)));
 
-					$post_status = $wpdb->get_var("SELECT post_status FROM {$wpdb->prefix}posts where ID=$parent_id");
+					$post_status = $wpdb->get_var($wpdb->prepare("SELECT post_status FROM {$wpdb->prefix}posts where ID=%d", absint($parent_id)));
 					if (!empty($post_status)) {
 						if ($post_status != 'trash' && $post_status != 'inherit') {
 							$extracted_ids[] = $ids;
@@ -225,7 +227,7 @@ class PostExport extends ExportExtension
 		}
 
 		$get_post_ids = "select DISTINCT ID from {$wpdb->prefix}posts";
-		$get_post_ids .= " where post_type = '$module'";
+		$get_post_ids .= $wpdb->prepare(" where post_type = %s", $module);
 
 		/**
 		 * Check for specific status
@@ -297,15 +299,15 @@ class PostExport extends ExportExtension
 			} else {
 				//when polylang wpml active
 				$products = "select DISTINCT ID from {$wpdb->prefix}posts";
-				$products .= " where post_type = '$module'";
+				$products .= $wpdb->prepare(" where post_type = %s", $module);
 				if (!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true' && !empty($conditions['specific_status']['status'])) { //Period and Status both are TRUE 
 					if ($conditions['specific_period']['from'] == $conditions['specific_period']['to']) {
 						$status = $conditions['specific_status']['status'];
-						$products .= " and post_status = '$status'";
+						$products .= $wpdb->prepare(" and post_status = %s", $status);
 						$products .= " and DATE(post_date) ='" . $conditions['specific_period']['from'] . "'";
 					} else {
 						$status = $conditions['specific_status']['status'];
-						$products .= " and post_status = '$status'";
+						$products .= $wpdb->prepare(" and post_status = %s", $status);
 						$products .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . " 23:00:00'";
 					}
 				} elseif (!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
@@ -320,11 +322,13 @@ class PostExport extends ExportExtension
 					if ($conditions['specific_status']['status'] == 'all') {
 						$products .= " and post_status in ('publish','draft','trash','private','pending') ORDER by post_date";
 					} else {
-						$products .= " and post_status = '$status' ORDER by post_date";
+						$products .= $wpdb->prepare(" and post_status = %s", $status) . " ORDER by post_date";
 					}
 				} elseif (!empty($conditions['specific_post_id']['is_check']) && $conditions['specific_post_id']['is_check'] == 'true') {
-					$prod_ids = $conditions['specific_post_id']['post_id'];
-					$products .= "and ID in ($prod_ids)";
+					$prod_ids = array_filter(array_map('absint', explode(',', $conditions['specific_post_id']['post_id'])));
+					if (!empty($prod_ids)) {
+						$products .= " and ID in (" . implode(',', $prod_ids) . ")";
+					}
 
 				}
 				if (empty($conditions['specific_status']['status']) && empty($conditions['specific_period']['is_check'])) {
@@ -334,15 +338,15 @@ class PostExport extends ExportExtension
 				$product_array = $products;
 				foreach ($products as $product_val) {
 					$products_var = "select DISTINCT ID from {$wpdb->prefix}posts";
-					$products_var .= " where post_type = 'product_variation' and post_parent = '$product_val'";
+					$products_var .= $wpdb->prepare(" where post_type = 'product_variation' and post_parent = %d", absint($product_val));
 					if (!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true' && !empty($conditions['specific_status']['status'])) { //Period and Status both are TRUE 
 						if ($conditions['specific_period']['from'] == $conditions['specific_period']['to']) {
 							$status = $conditions['specific_status']['status'];
-							$products_var .= " and post_status = '$status'";
+							$products_var .= $wpdb->prepare(" and post_status = %s", $status);
 							$products_var .= " and DATE(post_date) ='" . $conditions['specific_period']['from'] . "'";
 						} else {
 							$status = $conditions['specific_status']['status'];
-							$products_var .= " and post_status = '$status'";
+							$products_var .= $wpdb->prepare(" and post_status = %s", $status);
 							$products_var .= " and post_date >= '" . $conditions['specific_period']['from'] . "' and post_date <= '" . $conditions['specific_period']['to'] . " 23:00:00'";
 						}
 					} elseif (!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
@@ -357,11 +361,13 @@ class PostExport extends ExportExtension
 						if ($conditions['specific_status']['status'] == 'all') {
 							$products_var .= " and post_status in ('publish','draft','trash','private','pending') ORDER by post_date";
 						} else {
-							$products_var .= " and post_status = '$status' ORDER by post_date";
+							$products_var .= $wpdb->prepare(" and post_status = %s", $status) . " ORDER by post_date";
 						}
 					} elseif (!empty($conditions['specific_post_id']['is_check']) && $conditions['specific_post_id']['is_check'] == 'true') {
-						$prod_ids = $conditions['specific_post_id']['post_id'];
-						$products_var .= "and ID in ($prod_ids)";
+						$prod_ids = array_filter(array_map('absint', explode(',', $conditions['specific_post_id']['post_id'])));
+						if (!empty($prod_ids)) {
+							$products_var .= " and ID in (" . implode(',', $prod_ids) . ")";
+						}
 
 					}
 					if (empty($conditions['specific_status']['status']) && empty($conditions['specific_period']['is_check'])) {
@@ -438,11 +444,11 @@ class PostExport extends ExportExtension
 					$get_post_ids[] = $my_orders->get_id();
 				}
 				foreach ($get_post_ids as $ids) {
-					$module = $wpdb->get_var("SELECT post_type FROM {$wpdb->prefix}posts where id=$ids");
+					$module = $wpdb->get_var($wpdb->prepare("SELECT post_type FROM {$wpdb->prefix}posts where id=%d", absint($ids)));
 				}
 				if ($module == 'shop_order_placehold') {//post_status shop_order_placehold!
 					$orders = "select DISTINCT p.ID from {$wpdb->prefix}posts as p inner join {$wpdb->prefix}wc_orders as wc ON p.ID=wc.id";
-					$orders .= " where p.post_type = '$module'";
+					$orders .= $wpdb->prepare(" where p.post_type = %s", $module);
 					if (!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
 						$orders .= " and wc.status in ('wc-completed', 'wc-cancelled', 'wc-on-hold', 'wc-processing', 'wc-pending')";
 						if ($conditions['specific_period']['from'] == $conditions['specific_period']['to']) {
@@ -456,7 +462,7 @@ class PostExport extends ExportExtension
 					}
 				} else {//post_status shop_order!
 					$orders = "select DISTINCT ID from {$wpdb->prefix}posts";
-					$orders .= " where post_type = '$module'";
+					$orders .= $wpdb->prepare(" where post_type = %s", $module);
 					if (!empty($conditions['specific_period']['is_check']) && $conditions['specific_period']['is_check'] == 'true') {
 						$orders .= " and post_status in ('wc-completed', 'wc-cancelled', 'wc-on-hold', 'wc-processing', 'wc-pending')";
 						if ($conditions['specific_period']['from'] == $conditions['specific_period']['to']) {
@@ -536,8 +542,10 @@ class PostExport extends ExportExtension
 		// Check for specific authors
 		if (!empty($conditions['specific_authors']['is_check'] == '1') && !empty($conditions['specific_authors']['author'])) {
 			if (isset($conditions['specific_authors']['author'])) {
-				$author_ids = implode(',', $conditions['specific_authors']['author']);
-				$get_post_ids .= " AND post_author IN ({$author_ids})";
+				$author_ids = array_filter(array_map('absint', (array) $conditions['specific_authors']['author']));
+				if (!empty($author_ids)) {
+					$get_post_ids .= " AND post_author IN (" . implode(',', $author_ids) . ")";
+				}
 
 			}
 		}
@@ -555,7 +563,7 @@ class PostExport extends ExportExtension
 					$result = array();
 					foreach ($get_total_row_count as $result_value) {
 						//$get_post_date_time = $wpdb->get_results( $wpdb->prepare("SELECT post_date FROM {$wpdb->prefix}posts WHERE id=$result_value") ,ARRAY_A);
-						$get_post_date_time = $wpdb->get_results("SELECT post_date FROM {$wpdb->prefix}posts WHERE id = $result_value", ARRAY_A);
+						$get_post_date_time = $wpdb->get_results($wpdb->prepare("SELECT post_date FROM {$wpdb->prefix}posts WHERE id = %d", absint($result_value)), ARRAY_A);
 						$get_post_date = date("Y-m-d", strtotime($get_post_date_time[0]['post_date']));
 						if ($get_post_date == $conditions['specific_period']['from']) {
 							$get_post_date_value[] = $result_value;
@@ -565,13 +573,13 @@ class PostExport extends ExportExtension
 					$result = $get_post_date_value;
 				} else {
 					self::$export_instance->totalRowCount = count($get_total_row_count);
-					$offset_limit = " order by ID asc limit $offset, $limit";
+					$offset_limit = " order by ID asc limit {$offset}, {$limit}";
 					$query_with_offset_limit = $get_post_ids . $offset_limit;
 					$result = $wpdb->get_col($query_with_offset_limit);
 				}
 			} else {
 				self::$export_instance->totalRowCount = count($get_total_row_count);
-				$offset_limit = " order by ID asc limit $offset, $limit";
+				$offset_limit = " order by ID asc limit {$offset}, {$limit}";
 				$query_with_offset_limit = $get_post_ids . $offset_limit;
 				$result = $wpdb->get_col($query_with_offset_limit);
 			}
@@ -600,7 +608,11 @@ class PostExport extends ExportExtension
 			} else {
 				// Fetch all reviews if no specific conditions are set
 				$reviews = $wpdb->get_results(
-					"SELECT * FROM {$wpdb->prefix}jet_reviews ORDER BY date DESC LIMIT {$limit} OFFSET {$offset}",
+					$wpdb->prepare(
+						"SELECT * FROM {$wpdb->prefix}jet_reviews ORDER BY date DESC LIMIT %d OFFSET %d",
+						$limit,
+						$offset
+					),
 					ARRAY_A
 				);
 
@@ -763,7 +775,7 @@ class PostExport extends ExportExtension
 		// jeteng fields
 		if (is_plugin_active('jet-engine/jet-engine.php')) {
 
-			$jetEnginefields = $wpdb->get_results("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = '$optionalType' AND status IN ('publish','built-in')", ARRAY_A);
+			$jetEnginefields = $wpdb->get_results($wpdb->prepare("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = %s AND status IN ('publish','built-in')", $optionalType), ARRAY_A);
 			$jetEnginefields[0]['meta_fields'] = isset($jetEnginefields[0]['meta_fields']) ? $jetEnginefields[0]['meta_fields'] : '';
 
 			$unserializedMeta = maybe_unserialize($jetEnginefields[0]['meta_fields']);
@@ -854,7 +866,7 @@ class PostExport extends ExportExtension
 
 			/*jet releation export support added */
 			$get_rel_fields = $wpdb->get_results("SELECT id,labels, args, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE status = 'relation' ", ARRAY_A);
-			$get_cpt_fields = $wpdb->get_results("SELECT id,labels, args, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = '$optionalType' ", ARRAY_A);
+			$get_cpt_fields = $wpdb->get_results($wpdb->prepare("SELECT id,labels, args, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = %s ", $optionalType), ARRAY_A);
 			if (!empty($get_rel_fields)) {
 				foreach ($get_rel_fields as $get_rel_values) {
 					$imported_type = !empty($optionalType) ? $optionalType : $module;
@@ -1012,10 +1024,10 @@ class PostExport extends ExportExtension
 					$headline = $rank_math['headline'];
 					$schema_description = $rank_math['description'];
 					$article_type = $rank_math['@type'];
-					$re_id = $wpdb->get_results("SELECT redirection_id FROM {$wpdb->prefix}rank_math_redirections_cache where object_id='$id'");
+					$re_id = $wpdb->get_results($wpdb->prepare("SELECT redirection_id FROM {$wpdb->prefix}rank_math_redirections_cache where object_id=%d", absint($id)));
 					$redirect_id = $re_id[0];
 					$redirection_id = $redirect_id->redirection_id;
-					$result = $wpdb->get_results("SELECT url_to,header_code FROM {$wpdb->prefix}rank_math_redirections where id='$redirection_id'");
+					$result = $wpdb->get_results($wpdb->prepare("SELECT url_to,header_code FROM {$wpdb->prefix}rank_math_redirections where id=%d", absint($redirection_id)));
 					$rank_math_redirections = $result[0];
 					$url_to = $rank_math_redirections->url_to;
 					$header_code = $rank_math_redirections->header_code;
@@ -1158,7 +1170,7 @@ class PostExport extends ExportExtension
 				}
 				if (is_array($jetCPTFieldsName) && isset($value->meta_key)) {
 					if (in_array($value->meta_key, $jetCPTFieldsName)) {
-						$jetEnginefields = $wpdb->get_results("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = '$optionalType' AND status IN ('publish','built-in')", ARRAY_A);
+						$jetEnginefields = $wpdb->get_results($wpdb->prepare("SELECT id, meta_fields FROM {$wpdb->prefix}jet_post_types WHERE slug = %s AND status IN ('publish','built-in')", $optionalType), ARRAY_A);
 
 						if (!empty($jetEnginefields)) {
 							$unserializedMeta = maybe_unserialize($jetEnginefields[0]['meta_fields']);
