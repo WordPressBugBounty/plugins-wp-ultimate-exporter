@@ -10,7 +10,7 @@
  *
  * @wordpress-plugin
  * Plugin Name: WP Ultimate Exporter
- * Version:     3.0
+ * Version:     3.1
  * Plugin URI:  https://www.smackcoders.com/ultimate-exporter.html
  * Description: Backup tool to export all your WordPress data as CSV file. eCommerce data of WooCommerce, eCommerce, Custom Post and Custom field information along with default WordPress modules.
  * Author:      Smackcoders
@@ -39,7 +39,7 @@ if (!defined('ABSPATH'))
 	exit; // Exit if accessed directly
 
 define('IMPORTER_VERSION', '7.41');
-define('EXPORTER_VERSION', '3.0');
+define('EXPORTER_VERSION', '3.1');
 
 if (!function_exists('is_plugin_active')) {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -49,6 +49,16 @@ function smexp_is_parent_importer_active()
 {
 	return is_plugin_active('wp-ultimate-csv-importer/wp-ultimate-csv-importer.php')
 		|| is_plugin_active('wp-ultimate-csv-importer-pro/wp-ultimate-csv-importer-pro.php');
+}
+
+/**
+ * Whether WP Ultimate Exporter Pro is active (owns the export admin UI).
+ *
+ * @return bool
+ */
+function smexp_is_exporter_pro_active()
+{
+	return is_plugin_active('wordpress-ultimate-exporter-pro/wordpress-ultimate-exporter-pro.php');
 }
 
 require_once('Plugin.php');
@@ -62,6 +72,7 @@ require_once('exportExtensions/EDDExport.php');
 
 if (
 	smexp_is_parent_importer_active() &&
+	! smexp_is_exporter_pro_active() &&
 	class_exists('Smackcoders\SMEXP\ExportExtension')
 ) {
 	$upload = wp_upload_dir();
@@ -226,7 +237,13 @@ if (
 	}
 } else {
 
-	if (is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php')) {
+	// Stay installed (idle) while Exporter Pro owns the UI. Only auto-deactivate when
+	// the Free/Pro CSV Importer parent is missing and Pro Exporter is not covering us.
+	if (
+		is_plugin_active('wp-ultimate-exporter/wp-ultimate-exporter.php') &&
+		! smexp_is_parent_importer_active() &&
+		! smexp_is_exporter_pro_active()
+	) {
 		deactivate_plugins('wp-ultimate-exporter/wp-ultimate-exporter.php');
 
 		add_action('admin_notices', 'Smackcoders\\SMEXP\\Notice_msg_exporter_Deactivate');

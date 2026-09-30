@@ -179,11 +179,6 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 
 		public function totalRecords()
 		{
-			// Log BEFORE nonce check to see if function is called
-			$debug_log = dirname(__FILE__) . '/debug_export.txt';
-			file_put_contents($debug_log, "=== totalRecords called at " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
-			file_put_contents($debug_log, "POST data: " . print_r($_POST, true) . "\n", FILE_APPEND);
-
 			if (!is_user_logged_in() || !current_user_can('manage_options')) {
 				wp_send_json_error(['message' => 'Unauthorized access.'], 403);
 				return;
@@ -193,16 +188,11 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			global $wpdb;
 			$module = sanitize_text_field($_POST['module']);
 			$optionalType = isset($_POST['optionalType']) ? sanitize_text_field($_POST['optionalType']) : '';
-			file_put_contents(dirname(__FILE__) . '/debug_export.txt', "After nonce check - TotalRecords: $module, $optionalType\n", FILE_APPEND);
 			// Check for EDD modules first to avoid incorrect reassignment
 			if ($module == 'EDD_CUSTOMERS' || $module == 'EDD_DISCOUNTS' || $module == 'EDD_ORDERS' || $module == 'EDD_DOWNLOADS') {
-				$log_file = dirname(__FILE__) . '/smack_debug_edd.txt';
-				file_put_contents($log_file, "Entering EDD block: module=$module\n", FILE_APPEND);
-
 				// Check if EDD tables exist (more robust than class/plugin checks in AJAX)
 				$table_check = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}edd_customers'");
 				if ($table_check != $wpdb->prefix . 'edd_customers') {
-					file_put_contents($log_file, "EDD tables not found\n", FILE_APPEND);
 					echo wp_json_encode(0); 
 					wp_die();
 				}
@@ -226,7 +216,6 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					$total = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}posts WHERE post_type = 'download' AND post_status IN ('publish','draft','future','private','pending')");
 				}
 
-				file_put_contents($log_file, "Module: $module, Count: $total\n", FILE_APPEND);
 				echo wp_json_encode((int) $total);
 				wp_die();
 			}
@@ -289,12 +278,10 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 			elseif ($module == 'CustomPosts' && in_array($optionalType, ['EDD_CUSTOMERS', 'EDD_DISCOUNTS', 'EDD_ORDERS', 'EDD_DOWNLOADS'])) {
 				// Reassign module to the EDD type so it gets handled by the EDD logic above
 				$module = $optionalType;
-				file_put_contents(dirname(__FILE__) . '/debug_export.txt', "CustomPosts with EDD optionalType: $module\n", FILE_APPEND);
 
 				// Check if EDD tables exist
 				$table_check = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}edd_customers'");
 				if ($table_check != $wpdb->prefix . 'edd_customers') {
-					file_put_contents(dirname(__FILE__) . '/debug_export.txt', "EDD tables not found\n", FILE_APPEND);
 					echo wp_json_encode(0);
 					wp_die();
 				}
@@ -318,7 +305,6 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					$total = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}posts WHERE post_type = 'download' AND post_status IN ('publish','draft','future','private','pending')");
 				}
 
-				file_put_contents(dirname(__FILE__) . '/debug_export.txt', "EDD Module: $module, Count: $total\n", FILE_APPEND);
 				echo wp_json_encode((int) $total);
 				wp_die();
 			}
@@ -332,7 +318,6 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					$optional_type = $optionalType;
 				}
 				$module = ExportExtension::$post_export->import_post_types($module, $optional_type);
-				file_put_contents(dirname(__FILE__) . '/debug_export.txt', "PostImport: module=$module\n", FILE_APPEND);
 			}
 
 			if ($module == 'EDD_DOWNLOADS') {
@@ -346,15 +331,12 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 				}
 			}
 			if ($module == 'EDD_CUSTOMERS' || $module == 'EDD_DISCOUNTS') {
-				file_put_contents(dirname(__FILE__) . '/debug_export.txt', "Entering EDD_CUSTOMERS/DISCOUNTS block\n", FILE_APPEND);
 				if (!class_exists('Easy_Digital_Downloads')) {
-					file_put_contents(dirname(__FILE__) . '/debug_export.txt', "EDD Class not found\n", FILE_APPEND);
 					echo wp_json_encode(0);
 					wp_die();
 				}
 				if ($module == 'EDD_CUSTOMERS') {
 					$total = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}edd_customers");
-					file_put_contents(dirname(__FILE__) . '/debug_export.txt', "EDD_CUSTOMERS count query: $total\n", FILE_APPEND);
 				} else {
 					if (class_exists('\\EDD\\Orders\\Order_Query')) {
 						$total = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}edd_adjustments WHERE type = 'discount'");
@@ -589,7 +571,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 				$eventExclusions = str_replace("\\", '', sanitize_text_field(isset($_POST['eventExclusions']) ? sanitize_text_field($_POST['eventExclusions']) : ''));
 				$eventExclusions = json_decode($eventExclusions, True);
 				$this->eventExclusions = isset($eventExclusions) && !empty($eventExclusions) ? $eventExclusions : array();
-				$this->fileName = isset($_POST['fileName']) ? sanitize_text_field($_POST['fileName']) : '';
+				$this->fileName = isset($_POST['fileName']) ? str_replace(array('/', '\\'), '', sanitize_text_field($_POST['fileName'])) : '';
 				if (empty($_POST['offset']) || sanitize_text_field($_POST['offset']) == 'undefined') {
 					$this->offset = 0;
 				} else {
@@ -2016,19 +1998,24 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 					file_put_contents($index_php_file, $file_content);
 				}
 
-				if (empty($this->random_data)) {
+				// Only accept a folder name in the format generated below; anything else could traverse.
+				if (empty($this->random_data) || !preg_match('/^[A-Za-z0-9]{16}$/', $this->random_data)) {
 					$random_folder = wp_generate_password(16, false); // 16-character random folder name
 					$upload_dir = $upload_dir . $random_folder . '/';
 				} else {
 					$random_folder = $this->random_data;
 					$upload_dir = $upload_dir . $random_folder . '/';
 				}
-				if (!is_dir($upload_dir)) {
-					wp_mkdir_p($upload_dir);
+				if (method_exists('\Smackcoders\UCI\Core\SecurityHelper', 'ensure_secure_directory')) {
+					\Smackcoders\UCI\Core\SecurityHelper::ensure_secure_directory($upload_dir);
+				} else {
+					if (!is_dir($upload_dir)) {
+						wp_mkdir_p($upload_dir);
+					}
+					@chmod($upload_dir, 0755);
 				}
 				$base_dir = wp_upload_dir();
 				$upload_url = $base_dir['baseurl'] . '/smack_uci_uploads/exports/' . $random_folder . '/';
-				chmod($upload_dir, 0777);
 			}
 
 			if ($this->checkSplit == 'true') {
@@ -2486,7 +2473,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 
 						$loc = get_post_meta($id, '_location_id', true);
 						$event_id = get_post_meta($id, '_event_id', true);
-						$res = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}em_locations WHERE location_id='$loc' ");
+						$res = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}em_locations WHERE location_id = %d", $loc));
 
 						if ($res) {
 							foreach ($res as $location) {
@@ -2495,7 +2482,7 @@ if (class_exists('Smackcoders\SMEXP\ExportExtensionParent')) {
 							}
 						}
 
-						$ticket = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}em_tickets WHERE event_id='$event_id' ");
+						$ticket = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->prefix}em_tickets WHERE event_id = %d", $event_id));
 
 						$ticket[0] = isset($ticket[0]) ? $ticket[0] : '';
 						$ticket_meta = $ticket[0];

@@ -1946,10 +1946,24 @@ class WooCommerceExport extends ExportExtension{
 		$question_hint = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id and meta_key='question_hint' ");
 		$question_view_type = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id and meta_key='question_view_type' ");
 		$image = $wpdb->get_var("SELECT meta_value FROM {$wpdb->prefix}postmeta WHERE post_id = $id and meta_key='image' ");
-		$answers = unserialize($answers);
+
+		// MasterStudy stores answers as a serialized array of arrays (text/isTrue).
+		// Disallow object instantiation to prevent PHP Object Injection via crafted meta (e.g. C: payloads).
+		$answers_decoded = array();
+		if ( is_string( $answers ) && '' !== $answers ) {
+			$decoded = @unserialize( $answers, array( 'allowed_classes' => false ) );
+			if ( is_array( $decoded ) ) {
+				$answers_decoded = $decoded;
+			}
+		}
 		$answers_string = '';
-		foreach ($answers as $answer) {
-			$answers_string .= $answer['text'] . ',' . $answer['isTrue'] . '|';
+		foreach ( $answers_decoded as $answer ) {
+			if ( ! is_array( $answer ) ) {
+				continue;
+			}
+			$text    = isset( $answer['text'] ) ? $answer['text'] : '';
+			$is_true = isset( $answer['isTrue'] ) ? $answer['isTrue'] : '';
+			$answers_string .= $text . ',' . $is_true . '|';
 		}
 
 		WooCommerceExport::$export_instance->data[$id]['type'] = $type;

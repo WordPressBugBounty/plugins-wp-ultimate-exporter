@@ -5,8 +5,8 @@ Tags: export orders, product export, migration export, export woocommerce produc
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 3.0
-Version: 3.0
+Stable tag: 3.1
+Version: 3.1
 Author URI: https://www.smackcoders.com/wp-ultimate-csv-importer-pro.html
 License: GPLv2 or later
 
@@ -450,6 +450,12 @@ Yes. You can export Easy Digital Downloads data, including Downloads, Customers,
 
 
 == Changelog ==
+
+= 3.1 =
+* Fixed: Export directories are no longer created world-writable (0777); they now use standard 0755 permissions.
+* Fixed: Removed debug logging that wrote request data to a publicly readable file.
+* Improved: Export folder names and file names are validated to prevent path traversal.
+* Improved: Events Manager Location and ticket lookups during export now use prepared database queries.
 
 = 3.0 =
 * Improved: Aligned with WP Ultimate CSV Importer 9.0.
@@ -935,10 +941,13 @@ Fixed: Resolved path issue, Updated export file path to utilize dynamic values
 
 == Upgrade Notice ==
 
+= 3.1 =
+
+Security update: export directories are no longer world-writable. Update alongside WP Ultimate CSV Importer 9.2. Recommended for all users.
+
 = 3.0 =
 
 Aligned with WP Ultimate CSV Importer 9.0, including the redesigned interface. Update alongside the core plugin. Recommended for all users.
-
 
 
 
